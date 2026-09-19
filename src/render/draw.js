@@ -335,7 +335,11 @@ export function drawHud(ctx, stats, world, ship) {
 
   // Напівпрозора плашка під HUD
   ctx.fillStyle = 'rgba(15, 23, 42, 0.82)'
-  ctx.roundRect(16, 16, 360, 220, 8)
+  if (ctx.roundRect) {
+    ctx.roundRect(16, 16, 360, 230, 8)
+  } else {
+    ctx.rect(16, 16, 360, 230)
+  }
   ctx.fill()
   ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)'
   ctx.lineWidth = 1.5

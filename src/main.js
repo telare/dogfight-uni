@@ -20,6 +20,8 @@ import {
 
 const input = createInput(window)
 let stars = []
+let world = null
+let ship = null
 
 const { ctx, size } = createCanvas(document.querySelector('#game'), {
   onResize({ w, h }) {
@@ -35,10 +37,10 @@ const { ctx, size } = createCanvas(document.querySelector('#game'), {
 })
 
 // Створення ігрового світу на базі Map<number, Entity>
-const world = new World({ width: size.w, height: size.h })
+world = new World({ width: size.w, height: size.h })
 
 // Створення корабля (успадковує Entity)
-const ship = new Ship({
+ship = new Ship({
   pos: new Vector2(size.w / 2, size.h / 2),
 })
 world.playerShip = ship
