@@ -332,3 +332,164 @@ body {
   box-shadow: 0 0 22px rgba(56, 189, 248, 0.55);
   transform: translateY(-1px);
 }
+
+/* =========================================================
+   Lab 04 WebSocket Roster & Chat UI
+   ========================================================= */
+
+.lobby-comms-section {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.comms-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comms-header-row h3 {
+  margin: 0;
+  font-size: 11px;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+}
+
+.ws-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.ws-connected {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.ws-connecting {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.ws-disconnected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.comms-content-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .comms-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.roster-panel h4,
+.chat-panel h4 {
+  margin: 0 0 6px 0;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.roster-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 120px;
+  overflow-y: auto;
+  background: #090d16;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 4px;
+}
+
+.roster-item {
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #f1f5f9;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pilot-dot {
+  color: #4ade80;
+  font-size: 8px;
+}
+
+.roster-empty {
+  padding: 12px;
+  font-size: 10px;
+  color: #64748b;
+  text-align: center;
+}
+
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  height: 90px;
+  max-height: 90px;
+  overflow-y: auto;
+  background: #090d16;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-line {
+  color: #e2e8f0;
+  word-break: break-word;
+}
+
+.chat-line strong {
+  color: #38bdf8;
+}
+
+.chat-system {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 10px;
+}
+
+.chat-error {
+  color: #f87171;
+  font-size: 10px;
+}
+
+.chat-form {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.chat-form input {
+  flex: 1;
+  background: #090d16;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  outline: none;
+}
+
+.chat-form input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+}

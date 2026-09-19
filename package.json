@@ -3,15 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint src",
-    "format": "prettier --write src index.html",
-    "test": "node scripts/test-lab03.js",
-    "benchmark": "node scripts/measure-benchmark.js",
-    "generate:assets": "node scripts/generate-assets.js"
+    "dev": "npm run dev --workspace=client",
+    "dev:client": "npm run dev --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "start": "npm run start --workspace=server",
+    "build": "npm run build --workspace=client",
+    "preview": "npm run preview --workspace=client",
+    "test": "node --test server/test/*.test.js",
+    "lint": "eslint client/src server/src",
+    "format": "prettier --write client/src server/src client/index.html"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
@@ -20,5 +25,8 @@
     "globals": "^15.15.0",
     "prettier": "^3.5.1",
     "vite": "^6.1.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
   }
 }

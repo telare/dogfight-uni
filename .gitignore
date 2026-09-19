@@ -1,4 +1,6 @@
 node_modules/
 dist/
+client/dist/
+logs/*.ndjson
 .DS_Store
 *.local

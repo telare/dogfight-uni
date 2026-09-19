@@ -1,11 +1,13 @@
 /**
- * Dogfight — Модуль відображення лобі (Lobby View) у DOM (Lab 03)
+ * Dogfight — Модуль відображення лобі та чату (Lobby View) у DOM (Lab 04)
  *
- * Вимоги архітектури:
- * 1. Відокремлений від Lobby модуль: Lobby керує станом та подіями, LobbyView слухає та малює DOM.
- * 2. Інтерфейс вибору кімнати, введення позивного, показ пінгу, заповненості та налаштувань арени.
- * 3. Інтерактивні кнопки для тестування Failure Gallery (404, таймаут, абортування, битий JSON).
+ * Особливості Lab 04:
+ * 1. Підтримка WebSocket зв'язку в реальному часі через gameConnection (M2).
+ * 2. Живий ростер пілотів у секторі та інтерактивний радіочат (M2).
+ * 3. Кнопки тестування блокування Event Loop (/api/slow, M4) та стрімінгу повторів (/api/replays, M3).
  */
+
+import { gameConnection } from '../net/connection.js'
 
 export class LobbyView {
   /** @type {import('./lobby.js').Lobby} */
@@ -21,6 +23,7 @@ export class LobbyView {
     this.#onJoinCallback = onJoin
     this.#initDOM()
     this.#attachListeners()
+    this.#attachWebSocketListeners()
   }
 
   #initDOM() {
@@ -39,8 +42,8 @@ export class LobbyView {
       <div class="lobby-card">
         <div class="lobby-header">
           <div class="lobby-title-wrap">
-            <span class="lobby-badge">LAB 03 // ASYNC PIPELINE</span>
-            <h1 class="lobby-title">DOGFIGHT // FLIGHT OPS</h1>
+            <span class="lobby-badge">LAB 04 // NODE.JS, STREAMS & WEBSOCKETS</span>
+            <h1 class="lobby-title">DOGFIGHT // FLIGHT OPS & RADAR</h1>
           </div>
           <div class="lobby-pilot-input-wrap">
             <label for="pilot-name">ПОЗИВНИЙ ПІЛОТА:</label>
@@ -62,11 +65,38 @@ export class LobbyView {
             </div>
           </div>
 
+          <!-- Lab 04 Live Roster & Chat via WebSocket -->
+          <div class="lobby-comms-section">
+            <div class="comms-header-row">
+              <h3>📡 СЕКТОРНИЙ РАДІОЗВ'ЯЗОК (WEBSOCKET /ws)</h3>
+              <span id="ws-status-badge" class="ws-badge ws-disconnected">● Відключено</span>
+            </div>
+            <div class="comms-content-grid">
+              <div class="roster-panel">
+                <h4>👥 ПІЛОТИ В СЕКТОРІ:</h4>
+                <ul id="roster-list" class="roster-list">
+                  <li class="roster-empty">Оберіть сектор...</li>
+                </ul>
+              </div>
+              <div class="chat-panel">
+                <h4>💬 РАДІОЕФІР:</h4>
+                <div id="chat-messages" class="chat-messages">
+                  <div class="chat-system">Підключіться до сектора для переговорів.</div>
+                </div>
+                <form id="chat-form" class="chat-form">
+                  <input type="text" id="chat-input" placeholder="Повідомлення в ефір..." maxlength="120" spellcheck="false" />
+                  <button type="submit" class="btn btn-secondary">Надіслати</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
           <div class="lobby-test-section">
-            <h3>🧪 ДЕМО ДЛЯ ЗАХИСТУ: ГАЛЕРЕЯ ПОМИЛОК ТА ТАЙМАУТІВ</h3>
-            <p class="test-desc">Перевірка обробки збоїв мережі згідно зі специфікацією Lab 03:</p>
+            <h3>🧪 ДЕМО ДЛЯ ЗАХИСТУ: ЗБОЇ, EVENT LOOP ТА СТРІМИ</h3>
+            <p class="test-desc">Перевірка специфікації Lab 04 (Event Loop 300ms block, Backpressure, Timeouts):</p>
             <div class="test-buttons-grid">
-              <button id="test-timeout" class="btn btn-test" title="AbortSignal.timeout(300ms)">⏱️ Таймаут (Timeout)</button>
+              <button id="test-slow" class="btn btn-test" title="Блокування потоку Node на 300мс (/api/slow)">🛑 Блокування Loop (300ms)</button>
+              <button id="test-timeout" class="btn btn-test" title="AbortSignal.timeout(100ms)">⏱️ Таймаут (Timeout)</button>
               <button id="test-404" class="btn btn-test" title="Запит до неіснуючого маршруту 404">❌ Помилка 404 (No Retry)</button>
               <button id="test-abort" class="btn btn-test" title="controller.abort() посеред запиту">🛑 Скасування (Abort)</button>
               <button id="test-badjson" class="btn btn-test" title="Спроба розпарсити некоректний JSON">💥 Битий JSON</button>
@@ -105,6 +135,18 @@ export class LobbyView {
       this.hide()
     })
 
+    // Чат форма
+    const chatForm = this.#container.querySelector('#chat-form')
+    const chatInput = this.#container.querySelector('#chat-input')
+    chatForm?.addEventListener('submit', (e) => {
+      e.preventDefault()
+      const text = chatInput.value.trim()
+      if (text) {
+        gameConnection.sendChat(text)
+        chatInput.value = ''
+      }
+    })
+
     // Тестові кнопки failure gallery
     this.#setupFailureGalleryButtons()
 
@@ -119,6 +161,8 @@ export class LobbyView {
 
     this.#lobby.addEventListener('roomSelected', (e) => {
       this.#highlightSelectedRoom(e.detail.roomId)
+      // Підключаємо WebSocket до обраної кімнати
+      gameConnection.connect(e.detail.roomId, this.#lobby.playerName)
     })
 
     this.#lobby.addEventListener('error', (e) => {
@@ -130,7 +174,124 @@ export class LobbyView {
     })
   }
 
+  #attachWebSocketListeners() {
+    const statusBadge = this.#container.querySelector('#ws-status-badge')
+
+    gameConnection.addEventListener('status', (e) => {
+      const s = e.detail.status
+      if (!statusBadge) return
+      if (s === 'connected') {
+        statusBadge.textContent = '● В ефірі'
+        statusBadge.className = 'ws-badge ws-connected'
+      } else if (s === 'connecting') {
+        statusBadge.textContent = '○ Зв’язок...'
+        statusBadge.className = 'ws-badge ws-connecting'
+      } else {
+        statusBadge.textContent = '● Відключено'
+        statusBadge.className = 'ws-badge ws-disconnected'
+      }
+    })
+
+    gameConnection.addEventListener('welcome', (e) => {
+      this.#appendChatMessage({
+        from: 'СИСТЕМА',
+        text: `З'єднано з сектором ${e.detail.room?.name || ''}. Ваш ID: ${e.detail.playerId}`,
+        isSystem: true,
+      })
+      this.#renderRoster(e.detail.roster || [])
+    })
+
+    gameConnection.addEventListener('roster', (e) => {
+      this.#renderRoster(e.detail.players || [])
+    })
+
+    gameConnection.addEventListener('joined', (e) => {
+      const name = e.detail.player?.name || 'Пілот'
+      this.#appendChatMessage({
+        from: 'СИСТЕМА',
+        text: `${name} вийшов на зв'язок.`,
+        isSystem: true,
+      })
+      if (e.detail.roster) this.#renderRoster(e.detail.roster)
+    })
+
+    gameConnection.addEventListener('left', (e) => {
+      const name = e.detail.name || 'Пілот'
+      this.#appendChatMessage({
+        from: 'СИСТЕМА',
+        text: `${name} залишив частоту.`,
+        isSystem: true,
+      })
+      if (e.detail.roster) this.#renderRoster(e.detail.roster)
+    })
+
+    gameConnection.addEventListener('chat', (e) => {
+      this.#appendChatMessage(e.detail)
+    })
+
+    gameConnection.addEventListener('error', (e) => {
+      this.#appendChatMessage({
+        from: 'ПОМИЛКА',
+        text: e.detail.message || 'Збій протоколу',
+        isError: true,
+      })
+    })
+  }
+
+  #renderRoster(players) {
+    const list = this.#container.querySelector('#roster-list')
+    if (!list) return
+
+    if (!players || players.length === 0) {
+      list.innerHTML = '<li class="roster-empty">Немає пілотів у секторі</li>'
+      return
+    }
+
+    list.innerHTML = players
+      .map(
+        (p) =>
+          `<li class="roster-item"><span class="pilot-dot">●</span> ${p.name}</li>`,
+      )
+      .join('')
+  }
+
+  #appendChatMessage({ from, text, isSystem, isError }) {
+    const chatBox = this.#container.querySelector('#chat-messages')
+    if (!chatBox) return
+
+    const el = document.createElement('div')
+    el.className = isError
+      ? 'chat-error'
+      : isSystem
+        ? 'chat-system'
+        : 'chat-line'
+    el.innerHTML = `<strong>${from}:</strong> ${text}`
+
+    chatBox.appendChild(el)
+    chatBox.scrollTop = chatBox.scrollHeight
+  }
+
   #setupFailureGalleryButtons() {
+    // 0. Тест Блокування Event Loop (Lab 04 M4)
+    this.#container
+      .querySelector('#test-slow')
+      ?.addEventListener('click', async () => {
+        this.#logTest(
+          'Відправка GET /api/slow?ms=300 (блокуючий цикл на сервері)...',
+        )
+        const t0 = performance.now()
+        try {
+          const res = await fetch('/api/slow?ms=300')
+          const data = await res.json()
+          const dt = (performance.now() - t0).toFixed(1)
+          this.#logTest(
+            `[Node Single-Thread]: Сервер блокував потік на ${data.blockedMs}ms. Загальний час: ${dt}ms!`,
+          )
+        } catch (err) {
+          this.#logTest(`Помилка запиту: ${err.message}`, true)
+        }
+      })
+
     // 1. Тест Таймауту
     this.#container
       .querySelector('#test-timeout')
@@ -145,7 +306,7 @@ export class LobbyView {
         }
       })
 
-    // 2. Тест 404 (Ніколи не повторювати 4xx!)
+    // 2. Тест 404
     this.#container
       .querySelector('#test-404')
       ?.addEventListener('click', async () => {
@@ -171,7 +332,6 @@ export class LobbyView {
           'Запуск запиту та негайне скасування через controller.abort()...',
         )
         const refreshPromise = this.#lobby.refresh()
-        // Штучно перериваємо
         this.#lobby.stopPolling()
         try {
           await refreshPromise
@@ -184,7 +344,6 @@ export class LobbyView {
     this.#container
       .querySelector('#test-badjson')
       ?.addEventListener('click', async () => {
-        // Використовуємо існуючий файл звуку або картинки, де очікується JSON
         this.#lobby.setApiUrl('/assets/sprites.png')
         this.#logTest('Спроба розпарсити бінарний PNG як JSON...')
         try {
@@ -197,12 +356,12 @@ export class LobbyView {
         }
       })
 
-    // 5. Відновлення нормального API
+    // 5. Відновлення normal API
     this.#container
       .querySelector('#test-reset')
       ?.addEventListener('click', async () => {
-        this.#lobby.setApiUrl('/api/rooms.json')
-        this.#logTest('URL скинуто до робочого: /api/rooms.json')
+        this.#lobby.setApiUrl('/api/rooms')
+        this.#logTest('URL скинуто до робочого: /api/rooms')
         this.#hideError()
         await this.#lobby.refresh().catch(() => {})
       })
@@ -240,7 +399,7 @@ export class LobbyView {
         <div class="room-card ${isSelected ? 'selected' : ''}" data-room-id="${r.id}">
           <div class="room-header-row">
             <h3 class="room-name">${r.name}</h3>
-            <span class="room-ping">⚡ ${r.pingMs || 20} ms</span>
+            <span class="room-ping">⚡ ${r.pingMs || 15} ms</span>
           </div>
           <div class="room-meta-row">
             <span class="room-players">👥 Пілоти: <strong>${r.players}/${r.maxPlayers}</strong></span>
@@ -251,7 +410,6 @@ export class LobbyView {
       })
       .join('')
 
-    // Додаємо клік вибору картки
     list.querySelectorAll('.room-card').forEach((card) => {
       card.addEventListener('click', () => {
         const roomId = card.getAttribute('data-room-id')

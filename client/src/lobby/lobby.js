@@ -22,11 +22,11 @@ export class Lobby extends EventTarget {
   status = 'idle' // 'idle' | 'fetching' | 'joined' | 'error'
   lastError = null
 
-  #apiUrl = '/api/rooms.json'
+  #apiUrl = '/api/rooms'
   #pollTimer = null
   #currentController = null
 
-  constructor({ apiUrl = '/api/rooms.json', playerName = 'Ace-Pilot' } = {}) {
+  constructor({ apiUrl = '/api/rooms', playerName = 'Ace-Pilot' } = {}) {
     super()
     this.#apiUrl = apiUrl
     this.playerName = playerName
@@ -90,7 +90,16 @@ export class Lobby extends EventTarget {
     this.emit('statusChanged', { status: this.status })
 
     try {
-      const data = await fetchJson(this.#apiUrl, { signal })
+      let data = null
+      try {
+        data = await fetchJson(this.#apiUrl, { signal })
+      } catch (err) {
+        if (this.#apiUrl === '/api/rooms' && err.name !== 'AbortError') {
+          data = await fetchJson('/api/rooms.json', { signal })
+        } else {
+          throw err
+        }
+      }
 
       this.rooms = Array.isArray(data) ? data : []
       this.status = 'idle'

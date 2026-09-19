@@ -300,7 +300,7 @@ async function startApplication() {
     loop.start()
 
     // 6. Створення екземпляра моделі лобі та DOM-представлення
-    lobby = new Lobby({ apiUrl: '/api/rooms.json', playerName: 'Star-Pilot' })
+    lobby = new Lobby({ apiUrl: '/api/rooms', playerName: 'Star-Pilot' })
 
     lobbyView = new LobbyView(lobby, {
       onJoin: async (room) => {
