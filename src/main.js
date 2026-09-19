@@ -41,11 +41,13 @@ let ship = null
 let previous = null
 let lobby = null
 let lobbyView = null
+let ctx = null
+let size = { w: 1200, h: 800 }
 
 const input = createInput(window)
 
-const { ctx, size } = createCanvas(document.querySelector('#game'), {
-  onResize({ w, h }) {
+const canvasObj = createCanvas(document.querySelector('#game'), {
+  onResize({ w, h }, activeCtx) {
     if (world) {
       world.arenaWidth = w
       world.arenaHeight = h
@@ -54,11 +56,14 @@ const { ctx, size } = createCanvas(document.querySelector('#game'), {
       wrap(ship, w, h)
     }
     stars = createStarfield(w, h)
-    if (gameState === 'loading') {
-      renderLoadingScreen(ctx, w, h, loadingProgress)
+    const renderCtx = activeCtx || ctx
+    if (gameState === 'loading' && renderCtx) {
+      renderLoadingScreen(renderCtx, w, h, loadingProgress)
     }
   },
 })
+ctx = canvasObj.ctx
+size = canvasObj.size
 
 stars = createStarfield(size.w, size.h)
 

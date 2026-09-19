@@ -195,16 +195,23 @@ export async function loadAudio(ctx, url, { signal } = {}) {
   }
 
   if (!ctx) {
-    throw new Error('AudioContext is required for loadAudio')
+    return null
   }
 
   // Декодування сирих байтів у PCM AudioBuffer
   return await new Promise((resolve, reject) => {
-    ctx.decodeAudioData(
-      arrayBuffer.slice(0),
-      (buffer) => resolve(buffer),
-      (err) => reject(err || new Error(`Failed to decode audio: ${url}`)),
-    )
+    try {
+      const res = ctx.decodeAudioData(
+        arrayBuffer.slice(0),
+        (buffer) => resolve(buffer),
+        (err) => reject(err || new Error(`Failed to decode audio: ${url}`)),
+      )
+      if (res && typeof res.then === 'function') {
+        res.then(resolve).catch(reject)
+      }
+    } catch (err) {
+      reject(err)
+    }
   })
 }
 
@@ -292,13 +299,23 @@ export async function loadAll(
 
     let result = null
     if (item.type === 'image') {
-      result = await withRetry(() => loadImage(item.url, { signal }), {
-        signal,
-      })
+      try {
+        result = await withRetry(() => loadImage(item.url, { signal }), {
+          signal,
+        })
+      } catch (err) {
+        console.warn(`[loader] Фолбек для зображення ${item.key}:`, err)
+        result = null
+      }
     } else if (item.type === 'audio') {
-      result = await withRetry(() => loadAudio(ctx, item.url, { signal }), {
-        signal,
-      })
+      try {
+        result = await withRetry(() => loadAudio(ctx, item.url, { signal }), {
+          signal,
+        })
+      } catch (err) {
+        console.warn(`[loader] Фолбек для аудіо ${item.key}:`, err)
+        result = null
+      }
     } else if (item.type === 'json') {
       result = await withRetry(() => fetchJson(item.url, { signal }), {
         signal,

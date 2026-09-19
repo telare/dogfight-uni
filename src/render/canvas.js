@@ -18,7 +18,7 @@ export function createCanvas(canvas, { onResize } = {}) {
     canvas.style.height = `${size.h}px`
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    onResize?.(size)
+    onResize?.(size, ctx)
   }
 
   window.addEventListener('resize', resize)
