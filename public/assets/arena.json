@@ -1,0 +1,9 @@
+{
+  "name": "Orion Sector",
+  "friction": 1.15,
+  "maxAsteroids": 6,
+  "starDensity": 160,
+  "respawnDelaySec": 2,
+  "pickupsEnabled": true,
+  "ambientColor": "#0b0d14"
+}

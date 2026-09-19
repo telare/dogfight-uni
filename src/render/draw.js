@@ -83,7 +83,7 @@ export function drawStarfield(ctx, stars) {
   }
 }
 
-export function drawShip(ctx, ship) {
+export function drawShip(ctx, ship, spritesheet = null, frames = null) {
   if (!ship || !ship.alive) return
 
   const x = ship.pos ? ship.pos.x : ship.x
@@ -93,46 +93,62 @@ export function drawShip(ctx, ship) {
   ctx.translate(x, y)
   ctx.rotate(ship.angle)
 
-  // Полум'я двигуна
-  if (ship.thrust > 0) {
-    const flameFlicker = 14 + Math.random() * 8
-    ctx.fillStyle = '#fb923c'
+  if (spritesheet && frames?.ship) {
+    const frame =
+      ship.thrust > 0 && frames.shipThrust ? frames.shipThrust : frames.ship
+    ctx.drawImage(
+      spritesheet,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      -18,
+      -18,
+      36,
+      36,
+    )
+  } else {
+    // Полум'я двигуна
+    if (ship.thrust > 0) {
+      const flameFlicker = 14 + Math.random() * 8
+      ctx.fillStyle = '#fb923c'
+      ctx.beginPath()
+      ctx.moveTo(-10, 0)
+      ctx.lineTo(-flameFlicker - 6, -5)
+      ctx.lineTo(-flameFlicker, 0)
+      ctx.lineTo(-flameFlicker - 6, 5)
+      ctx.closePath()
+      ctx.fill()
+
+      ctx.fillStyle = '#fef08a'
+      ctx.beginPath()
+      ctx.moveTo(-10, 0)
+      ctx.lineTo(-flameFlicker * 0.6, -2.5)
+      ctx.lineTo(-flameFlicker * 0.4, 0)
+      ctx.lineTo(-flameFlicker * 0.6, 2.5)
+      ctx.closePath()
+      ctx.fill()
+    }
+
+    // Корпус корабля
+    ctx.fillStyle = '#f3f4f6'
+    ctx.strokeStyle = '#38bdf8'
+    ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.moveTo(-10, 0)
-    ctx.lineTo(-flameFlicker - 6, -5)
-    ctx.lineTo(-flameFlicker, 0)
-    ctx.lineTo(-flameFlicker - 6, 5)
+    ctx.moveTo(18, 0)
+    ctx.lineTo(-14, -12)
+    ctx.lineTo(-8, 0)
+    ctx.lineTo(-14, 12)
     ctx.closePath()
     ctx.fill()
+    ctx.stroke()
 
-    ctx.fillStyle = '#fef08a'
+    // Кабіна
+    ctx.fillStyle = '#0284c7'
     ctx.beginPath()
-    ctx.moveTo(-10, 0)
-    ctx.lineTo(-flameFlicker * 0.6, -2.5)
-    ctx.lineTo(-flameFlicker * 0.4, 0)
-    ctx.lineTo(-flameFlicker * 0.6, 2.5)
-    ctx.closePath()
+    ctx.arc(0, 0, 3.5, 0, Math.PI * 2)
     ctx.fill()
   }
-
-  // Корпус корабля
-  ctx.fillStyle = '#f3f4f6'
-  ctx.strokeStyle = '#38bdf8'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(18, 0)
-  ctx.lineTo(-14, -12)
-  ctx.lineTo(-8, 0)
-  ctx.lineTo(-14, 12)
-  ctx.closePath()
-  ctx.fill()
-  ctx.stroke()
-
-  // Кабіна
-  ctx.fillStyle = '#0284c7'
-  ctx.beginPath()
-  ctx.arc(0, 0, 3.5, 0, Math.PI * 2)
-  ctx.fill()
 
   // Силовий щит (якщо активний)
   if (ship.shield > 0) {
@@ -148,12 +164,31 @@ export function drawShip(ctx, ship) {
   ctx.restore()
 }
 
-export function drawBullet(ctx, bullet) {
+export function drawBullet(ctx, bullet, spritesheet = null, frames = null) {
   if (!bullet || !bullet.alive) return
 
   ctx.save()
   ctx.translate(bullet.pos.x, bullet.pos.y)
   ctx.rotate(bullet.angle)
+
+  if (spritesheet && frames) {
+    const frame = bullet.isHoming ? frames.bulletHoming : frames.bulletNormal
+    if (frame) {
+      ctx.drawImage(
+        spritesheet,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        -10,
+        -10,
+        20,
+        20,
+      )
+      ctx.restore()
+      return
+    }
+  }
 
   if (bullet.isHoming) {
     // Самонавідна ракета
@@ -186,12 +221,36 @@ export function drawBullet(ctx, bullet) {
   ctx.restore()
 }
 
-export function drawAsteroid(ctx, asteroid) {
+export function drawAsteroid(ctx, asteroid, spritesheet = null, frames = null) {
   if (!asteroid || !asteroid.alive) return
 
   ctx.save()
   ctx.translate(asteroid.pos.x, asteroid.pos.y)
   ctx.rotate(asteroid.angle)
+
+  if (spritesheet && frames) {
+    let frame = null
+    if (asteroid.isHoming) frame = frames.asteroidHoming
+    else if (asteroid.tier === 2) frame = frames.asteroidLarge
+    else frame = frames.asteroidMedium
+
+    if (frame) {
+      const r = asteroid.radius
+      ctx.drawImage(
+        spritesheet,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        -r,
+        -r,
+        r * 2,
+        r * 2,
+      )
+      ctx.restore()
+      return
+    }
+  }
 
   // Якщо астероїд-мисливець (homing через композицію), малюємо зловісне червоне свічення
   if (asteroid.isHoming) {
@@ -244,7 +303,7 @@ export function drawAsteroid(ctx, asteroid) {
   ctx.restore()
 }
 
-export function drawPickup(ctx, pickup) {
+export function drawPickup(ctx, pickup, spritesheet = null, frames = null) {
   if (!pickup || !pickup.alive) return
 
   ctx.save()
@@ -252,6 +311,30 @@ export function drawPickup(ctx, pickup) {
 
   const scale = 1 + Math.sin(pickup.pulse) * 0.15
   ctx.scale(scale, scale)
+
+  if (spritesheet && frames) {
+    let frame = frames.pickupShield
+    if (pickup.type === 'rapid') frame = frames.pickupRapid
+    else if (pickup.type === 'homing') frame = frames.pickupHoming
+    else if (pickup.type === 'heal') frame = frames.pickupHeal
+
+    if (frame) {
+      const r = pickup.radius
+      ctx.drawImage(
+        spritesheet,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        -r,
+        -r,
+        r * 2,
+        r * 2,
+      )
+      ctx.restore()
+      return
+    }
+  }
 
   let color = '#38bdf8'
   let label = '🛡'
@@ -311,19 +394,27 @@ export function drawExplosion(ctx, explosion) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {import('../sim/world.js').World} world
  * @param {Object} interpolatedShip
+ * @param {HTMLImageElement} [spritesheet]
+ * @param {Object} [frames]
  */
-export function drawWorldEntities(ctx, world, interpolatedShip) {
+export function drawWorldEntities(
+  ctx,
+  world,
+  interpolatedShip,
+  spritesheet = null,
+  frames = null,
+) {
   for (const entity of world) {
     if (!entity.alive) continue
 
     if (entity.kind === 'ship') {
-      drawShip(ctx, interpolatedShip || entity)
+      drawShip(ctx, interpolatedShip || entity, spritesheet, frames)
     } else if (entity.kind === 'bullet') {
-      drawBullet(ctx, entity)
+      drawBullet(ctx, entity, spritesheet, frames)
     } else if (entity.kind === 'asteroid') {
-      drawAsteroid(ctx, entity)
+      drawAsteroid(ctx, entity, spritesheet, frames)
     } else if (entity.kind === 'pickup') {
-      drawPickup(ctx, entity)
+      drawPickup(ctx, entity, spritesheet, frames)
     } else if (entity.kind === 'explosion') {
       drawExplosion(ctx, entity)
     }

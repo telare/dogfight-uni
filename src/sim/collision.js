@@ -86,6 +86,12 @@ function handleCollisionPair(world, a, b) {
   if (bullet && asteroid) {
     bullet.destroy()
     const killed = asteroid.takeDamage(bullet.damage)
+    world.emit?.('hit', {
+      targetKind: 'asteroid',
+      sourceKind: 'bullet',
+      pos: asteroid.pos.clone(),
+      damage: bullet.damage,
+    })
 
     if (killed) {
       // Спавн вибуху
@@ -96,11 +102,22 @@ function handleCollisionPair(world, a, b) {
           style: 'asteroid',
         }),
       )
+      world.emit?.('exploded', {
+        kind: 'asteroid',
+        pos: asteroid.pos.clone(),
+        tier: asteroid.tier,
+      })
 
       // Нарахування очок власнику кулі
       const owner = world.get(bullet.ownerId)
       if (owner && owner.kind === 'ship') {
-        owner.score += asteroid.tier === 2 ? 100 : 50
+        const delta = asteroid.tier === 2 ? 100 : 50
+        owner.score += delta
+        world.emit?.('score', {
+          score: owner.score,
+          delta,
+          pos: asteroid.pos.clone(),
+        })
       }
 
       // Якщо великий астероїд — розпадається на 2 менших
@@ -142,6 +159,12 @@ function handleCollisionPair(world, a, b) {
     if (bullet.ownerId !== ship.id) {
       bullet.destroy()
       ship.takeDamage(bullet.damage)
+      world.emit?.('hit', {
+        targetKind: 'ship',
+        sourceKind: 'bullet',
+        pos: ship.pos.clone(),
+        damage: bullet.damage,
+      })
       if (!ship.alive) {
         world.spawn(
           new Explosion({
@@ -150,6 +173,10 @@ function handleCollisionPair(world, a, b) {
             style: 'ship',
           }),
         )
+        world.emit?.('exploded', {
+          kind: 'ship',
+          pos: ship.pos.clone(),
+        })
       }
     }
     return
@@ -159,6 +186,12 @@ function handleCollisionPair(world, a, b) {
   if (ship && asteroid) {
     ship.takeDamage(35)
     const asteroidKilled = asteroid.takeDamage(30)
+    world.emit?.('hit', {
+      targetKind: 'ship',
+      sourceKind: 'asteroid',
+      pos: ship.pos.clone(),
+      damage: 35,
+    })
 
     // Фізичне відштовхування (пружний імпульс)
     const normal = ship.pos.sub(asteroid.pos).normalize()
@@ -173,6 +206,10 @@ function handleCollisionPair(world, a, b) {
           style: 'ship',
         }),
       )
+      world.emit?.('exploded', {
+        kind: 'ship',
+        pos: ship.pos.clone(),
+      })
     }
 
     if (asteroidKilled) {
@@ -183,6 +220,11 @@ function handleCollisionPair(world, a, b) {
           style: 'asteroid',
         }),
       )
+      world.emit?.('exploded', {
+        kind: 'asteroid',
+        pos: asteroid.pos.clone(),
+        tier: asteroid.tier,
+      })
     }
     return
   }
@@ -191,6 +233,15 @@ function handleCollisionPair(world, a, b) {
   if (ship && pickup) {
     pickup.collect(ship)
     ship.score += 50
+    world.emit?.('pickup', {
+      type: pickup.type,
+      pos: pickup.pos.clone(),
+    })
+    world.emit?.('score', {
+      score: ship.score,
+      delta: 50,
+      pos: pickup.pos.clone(),
+    })
     // Невеличкий спалах частинок при підборі
     world.spawn(
       new Explosion({

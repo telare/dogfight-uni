@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "sprites": {
+    "sheet": "/assets/sprites.png",
+    "frames": {
+      "ship": {
+        "x": 0,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "shipThrust": {
+        "x": 48,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "asteroidLarge": {
+        "x": 96,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      },
+      "asteroidMedium": {
+        "x": 144,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "asteroidHoming": {
+        "x": 176,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "bulletNormal": {
+        "x": 0,
+        "y": 48,
+        "w": 24,
+        "h": 24
+      },
+      "bulletHoming": {
+        "x": 24,
+        "y": 48,
+        "w": 24,
+        "h": 24
+      },
+      "pickupShield": {
+        "x": 48,
+        "y": 48,
+        "w": 32,
+        "h": 32
+      },
+      "pickupRapid": {
+        "x": 80,
+        "y": 48,
+        "w": 32,
+        "h": 32
+      },
+      "pickupHoming": {
+        "x": 112,
+        "y": 48,
+        "w": 32,
+        "h": 32
+      },
+      "pickupHeal": {
+        "x": 144,
+        "y": 48,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sounds": {
+    "laser": "/assets/sounds/laser.wav",
+    "hit": "/assets/sounds/hit.wav",
+    "explosion": "/assets/sounds/explosion.wav",
+    "pickup": "/assets/sounds/pickup.wav"
+  },
+  "arena": "/assets/arena.json"
+}

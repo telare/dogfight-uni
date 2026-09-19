@@ -173,6 +173,12 @@ export class Ship extends Entity {
     })
 
     world.spawn(bullet)
+    world.emit?.('fired', {
+      kind: 'bullet',
+      pos: spawnPos,
+      ownerId: this.id,
+      isHoming: Boolean(homingComponent),
+    })
 
     // Встановлення інтервалу перезарядки (вдвічі швидше при активному rapidFire)
     const interval =

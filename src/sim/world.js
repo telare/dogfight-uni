@@ -12,7 +12,7 @@ import { createHoming } from './components.js'
  * 3. Ефективні O(1) операції додавання, пошуку та видалення за id.
  * 4. Збереження порядку вставки та вбудований розмір .size.
  */
-export class World {
+export class World extends EventTarget {
   #entities = new Map()
 
   /** @type {import('./ship.js').Ship|null} */
@@ -24,8 +24,20 @@ export class World {
   arenaHeight = 800
 
   constructor({ width = 1200, height = 800 } = {}) {
+    super()
     this.arenaWidth = width
     this.arenaHeight = height
+  }
+
+  /**
+   * Диспетчеризація CustomEvent через вбудований EventTarget.
+   * Дозволяє розчепити фізику/симуляцію від аудіо та HUD.
+   *
+   * @param {string} type - назва події ('fired', 'hit', 'exploded', 'pickup', 'score', 'respawn')
+   * @param {any} [detail] - корисне навантаження події
+   */
+  emit(type, detail = {}) {
+    this.dispatchEvent(new CustomEvent(type, { detail }))
   }
 
   /**
@@ -195,6 +207,7 @@ export class World {
         const safePos = this.findSafeSpawnPos(this.playerShip.radius)
         this.playerShip.respawn(safePos)
         this.spawn(this.playerShip)
+        this.emit('respawn', { pos: safePos.clone() })
       }
     }
 

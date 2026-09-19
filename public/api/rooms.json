@@ -1,0 +1,29 @@
+[
+  {
+    "id": "room-alpha",
+    "name": "Alpha Outpost (Casual)",
+    "players": 3,
+    "maxPlayers": 8,
+    "arena": "standard",
+    "difficulty": "Normal",
+    "pingMs": 16
+  },
+  {
+    "id": "room-nebula",
+    "name": "Nebula Sector (High Velocity)",
+    "players": 5,
+    "maxPlayers": 8,
+    "arena": "storm",
+    "difficulty": "Hard",
+    "pingMs": 24
+  },
+  {
+    "id": "room-void",
+    "name": "Deep Void (Hunter Asteroids)",
+    "players": 1,
+    "maxPlayers": 4,
+    "arena": "dense",
+    "difficulty": "Extreme",
+    "pingMs": 38
+  }
+]
