@@ -185,18 +185,16 @@ export class World {
     }
 
     // 4. Логіка таймера відродження гравця через 2 секунди
-    if (this.playerShip) {
-      if (!this.playerShip.alive) {
-        if (this.#respawnTimer <= 0) {
-          this.#respawnTimer = 2.0 // рівно 2 секунди за специфікацією лаби
-        } else {
-          this.#respawnTimer -= dt
-          if (this.#respawnTimer <= 0) {
-            const safePos = this.findSafeSpawnPos(this.playerShip.radius)
-            this.playerShip.respawn(safePos)
-            this.spawn(this.playerShip)
-          }
-        }
+    if (this.playerShip && !this.playerShip.alive) {
+      if (this.#respawnTimer <= 0) {
+        this.#respawnTimer = 2.0 // рівно 2 секунди за специфікацією лаби
+      }
+      this.#respawnTimer -= dt
+      if (this.#respawnTimer <= 0) {
+        this.#respawnTimer = 0
+        const safePos = this.findSafeSpawnPos(this.playerShip.radius)
+        this.playerShip.respawn(safePos)
+        this.spawn(this.playerShip)
       }
     }
 

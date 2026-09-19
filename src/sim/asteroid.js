@@ -87,9 +87,10 @@ export class Asteroid extends Entity {
   update(dt, world) {
     if (this.homing) {
       this.homing.update(this, dt, world)
+    } else {
+      this.angle += this.rotSpeed * dt
     }
 
     super.update(dt, world)
-    this.angle += this.rotSpeed * dt
   }
 }

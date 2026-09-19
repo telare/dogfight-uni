@@ -16,6 +16,9 @@ export function lerpAngle(from, to, t) {
 
 export function interpolateShip(previous, current, alpha) {
   if (!previous || !current) return current
+  if (!current.alive || (!previous.alive && current.alive)) {
+    return current
+  }
 
   const prevX = previous.pos ? previous.pos.x : previous.x
   const prevY = previous.pos ? previous.pos.y : previous.y

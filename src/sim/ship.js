@@ -89,6 +89,7 @@ export class Ship extends Entity {
    * @param {number} amount
    */
   heal(amount) {
+    if (!this.alive) return
     this.#hp = Math.min(this.maxHp, this.#hp + amount)
   }
 
@@ -98,6 +99,7 @@ export class Ship extends Entity {
    * @param {number} duration
    */
   addShield(amount, duration) {
+    if (!this.alive) return
     this.shield = Math.min(100, this.shield + amount)
     this.shieldTimer = Math.max(this.shieldTimer, duration)
   }
@@ -107,6 +109,7 @@ export class Ship extends Entity {
    * @param {number} duration
    */
   activateRapidFire(duration) {
+    if (!this.alive) return
     this.rapidFireTimer = Math.max(this.rapidFireTimer, duration)
   }
 
@@ -115,6 +118,7 @@ export class Ship extends Entity {
    * @param {number} duration
    */
   activateHomingMissiles(duration) {
+    if (!this.alive) return
     this.homingTimer = Math.max(this.homingTimer, duration)
   }
 

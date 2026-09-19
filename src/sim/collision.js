@@ -158,7 +158,7 @@ function handleCollisionPair(world, a, b) {
   // 3. Корабель стикається з астероїдом
   if (ship && asteroid) {
     ship.takeDamage(35)
-    asteroid.takeDamage(30)
+    const asteroidKilled = asteroid.takeDamage(30)
 
     // Фізичне відштовхування (пружний імпульс)
     const normal = ship.pos.sub(asteroid.pos).normalize()
@@ -171,6 +171,16 @@ function handleCollisionPair(world, a, b) {
           pos: ship.pos,
           count: 45,
           style: 'ship',
+        }),
+      )
+    }
+
+    if (asteroidKilled) {
+      world.spawn(
+        new Explosion({
+          pos: asteroid.pos,
+          count: asteroid.tier === 2 ? 30 : 16,
+          style: 'asteroid',
         }),
       )
     }
