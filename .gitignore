@@ -4,3 +4,5 @@ client/dist/
 logs/*.ndjson
 .DS_Store
 *.local
+DEMO_GUIDE.md
+
