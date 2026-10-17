@@ -198,6 +198,34 @@ export const server = http.createServer(async (req, res) => {
     return
   }
 
+  // 3.1. GET /api/stats (Діагностика тіків, тривалості та джиттеру Lab 05)
+  if (pathname === '/api/stats' && req.method === 'GET') {
+    const memory = process.memoryUsage()
+    const roomsStats = roomManager.listRooms().map((r) => ({
+      id: r.id,
+      name: r.name,
+      players: r.players,
+      stats: r.stats,
+    }))
+
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+    })
+    res.end(
+      JSON.stringify({
+        status: 'ok',
+        uptimeSec: Math.floor(process.uptime()),
+        roomsCount: roomManager.count,
+        rssMb: (memory.rss / 1024 / 1024).toFixed(2),
+        heapUsedMb: (memory.heapUsed / 1024 / 1024).toFixed(2),
+        rooms: roomsStats,
+        timestamp: Date.now(),
+      }),
+    )
+    return
+  }
+
   // 4. GET /api/slow (Демонстрація блокування однопотокового циклу подій M4)
   if (pathname === '/api/slow' && req.method === 'GET') {
     const delayMs = Number.parseInt(url.searchParams.get('ms') || '300', 10)

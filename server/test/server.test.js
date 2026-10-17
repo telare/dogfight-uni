@@ -153,6 +153,18 @@ describe('Dogfight Server Test Suite', () => {
       assert.ok(elapsed >= 55)
     })
 
+    it('GET /api/stats повертає телеметрію та статистику тіків матчів (Lab 05)', async () => {
+      const res = await fetch(`${baseUrl}/api/stats`)
+      assert.equal(res.status, 200)
+      const data = await res.json()
+      assert.equal(data.status, 'ok')
+      assert.ok(Array.isArray(data.rooms))
+      assert.ok(data.rooms.length > 0)
+      const alpha = data.rooms.find((r) => r.id === 'room-alpha')
+      assert.ok(alpha)
+      assert.equal(alpha.stats.tickRate, 30)
+    })
+
     it('Захист від Path Traversal: повертає 403 при спробі виходу за межі директорії', async () => {
       const res = await fetch(`${baseUrl}/..%2f..%2fpackage.json`)
       // Або 403 Forbidden, або 404 (нормалізований safePath)
@@ -190,8 +202,20 @@ describe('Dogfight Server Test Suite', () => {
       const ws1Messages = []
       const ws2Messages = []
 
-      ws1.on('message', (d) => ws1Messages.push(JSON.parse(d.toString())))
-      ws2.on('message', (d) => ws2Messages.push(JSON.parse(d.toString())))
+      ws1.on('message', (d) => {
+        try {
+          ws1Messages.push(JSON.parse(d.toString()))
+        } catch {
+          // Ігноруємо бінарні фрейми снапшотів у тесті текстового ростера
+        }
+      })
+      ws2.on('message', (d) => {
+        try {
+          ws2Messages.push(JSON.parse(d.toString()))
+        } catch {
+          // Ігноруємо бінарні фрейми снапшотів у тесті текстового ростера
+        }
+      })
 
       // 1. Гравець 1 приєднується до room-alpha
       ws1.send(

@@ -10,6 +10,8 @@ export const ClientMessageType = {
   LEAVE: 'leave',
   CHAT: 'chat',
   PING: 'ping',
+  INPUT: 'input',
+  CONFIG: 'config',
 }
 
 export const ServerMessageType = {
@@ -143,7 +145,44 @@ export function validateClientMessage(rawData, maxBytes = 32768) {
       return { valid: true, msg: { type: ClientMessageType.LEAVE } }
 
     case ClientMessageType.PING:
-      return { valid: true, msg: { type: ClientMessageType.PING } }
+      return {
+        valid: true,
+        msg: {
+          type: ClientMessageType.PING,
+          clientTime: Number(parsed.clientTime) || Date.now(),
+        },
+      }
+
+    case ClientMessageType.INPUT: {
+      const seq =
+        Number.isInteger(parsed.seq) && parsed.seq >= 0 ? parsed.seq : 0
+      const tick =
+        Number.isInteger(parsed.tick) && parsed.tick >= 0 ? parsed.tick : 0
+      let turn = Number(parsed.turn)
+      if (Number.isNaN(turn) || !Number.isFinite(turn)) turn = 0
+      turn = Math.max(-1, Math.min(1, turn))
+      let thrust = Number(parsed.thrust)
+      if (Number.isNaN(thrust) || !Number.isFinite(thrust)) thrust = 0
+      thrust = Math.max(0, Math.min(1, thrust))
+      const fire = Boolean(parsed.fire)
+      return {
+        valid: true,
+        msg: { type: ClientMessageType.INPUT, seq, tick, turn, thrust, fire },
+      }
+    }
+
+    case ClientMessageType.CONFIG: {
+      return {
+        valid: true,
+        msg: {
+          type: ClientMessageType.CONFIG,
+          latencyMs: Math.max(0, Math.min(1000, Number(parsed.latencyMs) || 0)),
+          jitterMs: Math.max(0, Math.min(200, Number(parsed.jitterMs) || 0)),
+          dropRate: Math.max(0, Math.min(0.5, Number(parsed.dropRate) || 0)),
+          codec: parsed.codec === 'json' ? 'json' : 'binary',
+        },
+      }
+    }
 
     default:
       return {

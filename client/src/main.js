@@ -1,12 +1,16 @@
 import './style.css'
 import { createLoop } from './loop.js'
 import { createInput } from './input.js'
-import { Vector2 } from './sim/vector.js'
-import { Ship } from './sim/ship.js'
-import { World } from './sim/world.js'
-import { Asteroid } from './sim/asteroid.js'
-import { Pickup } from './sim/pickup.js'
-import { hideWrapForLerp, wrap } from './sim/arena.js'
+import {
+  Vector2,
+  Ship,
+  World,
+  Asteroid,
+  Pickup,
+  hideWrapForLerp,
+  wrap,
+  PRNG,
+} from 'shared'
 import { createCanvas } from './render/canvas.js'
 import {
   createStarfield,
@@ -14,7 +18,6 @@ import {
   drawGrid,
   drawStarfield,
   drawWorldEntities,
-  interpolateShip,
 } from './render/draw.js'
 import { renderLoadingScreen } from './render/loadingScreen.js'
 import { loadAll } from './assets/loader.js'
@@ -23,6 +26,10 @@ import { hudController } from './ui/hud.js'
 import { Lobby } from './lobby/lobby.js'
 import { LobbyView } from './lobby/lobbyView.js'
 import { runAssetBenchmark } from './assets/benchmark.js'
+import { gameConnection } from './net/connection.js'
+import { PredictionManager } from './net/prediction.js'
+import { InterpolationManager } from './net/interpolation.js'
+import { Netgraph } from './ui/netgraph.js'
 
 // Стан додатку
 let gameState = 'loading' // 'loading' | 'lobby' | 'playing'
@@ -67,9 +74,21 @@ size = canvasObj.size
 
 stars = createStarfield(size.w, size.h)
 
-// Додатковий стан для HUD (лог тестування 'this')
+// Менеджери мережевої синхронізації (Lab 05)
+const prediction = new PredictionManager()
+const interpolation = new InterpolationManager({
+  arenaWidth: size.w,
+  arenaHeight: size.h,
+})
+const netgraph = new Netgraph({
+  gameConnection,
+  predictionManager: prediction,
+  interpolationManager: interpolation,
+})
+
+// Додатковий стан для HUD (лог тестування 'this' та Netcode)
 const hudExtra = {
-  lastThisBugLog: 'Натисніть [K] для тесту багу this',
+  lastThisBugLog: 'Натисніть [K] для тесту багу this · [N] для Netgraph',
   lastThisBugSuccess: true,
 }
 
@@ -106,36 +125,73 @@ function runThisExperiment() {
 }
 
 /**
+ * Налаштування обробників мережевих подій WebSocket (Lab 05)
+ */
+gameConnection.addEventListener('welcome', (e) => {
+  const welcome = e.detail
+  if (welcome.seed && world) {
+    world.seed = welcome.seed
+    world.prng = new PRNG(welcome.seed)
+  }
+  if (welcome.shipId && ship) {
+    ship.assignId(welcome.shipId)
+  }
+  if (ship) {
+    ship.name = lobby ? lobby.playerName : 'Pilot'
+  }
+  hudExtra.lastThisBugLog = `[WS] Підключено до сектора: ${welcome.room?.name || 'Sector'}`
+})
+
+gameConnection.addEventListener('snapshot', (e) => {
+  const snapshot = e.detail
+  // 1. Буферизація та інтерполяція віддалених сутностей (M3)
+  interpolation.addSnapshot(snapshot)
+
+  // 2. Звірка локального корабля з авторитетним станом сервера (Reconciliation & Replay, M2)
+  if (ship && world) {
+    prediction.reconcile(snapshot, ship, world)
+  }
+})
+
+/**
  * Ініціалізація та налаштування світу для обраної кімнати лобі
  */
 function setupWorldForRoom(room) {
-  // Створення нового екземпляра World (успадковує EventTarget)
-  world = new World({ width: size.w, height: size.h })
+  world = new World({ width: size.w, height: size.h, seed: 42 })
+  interpolation.arenaWidth = size.w
+  interpolation.arenaHeight = size.h
+  interpolation.reset()
+  prediction.reset()
 
   // Створення корабля гравця
   ship = new Ship({
     pos: new Vector2(size.w / 2, size.h / 2),
+    name: lobby ? lobby.playerName : 'Pilot',
   })
   world.playerShip = ship
   world.spawn(ship)
   previous = ship.cloneState()
 
-  // Підписка аудіо та HUD на події світу через CustomEvents (EventTarget)
-  // Повне розчеплення: симуляція НЕ знає про soundSystem чи hudController!
+  // Підключення до сокета кімнати в реальному часі
+  if (room?.id) {
+    gameConnection.connect(room.id, lobby ? lobby.playerName : 'Pilot')
+  }
+
+  // Підписка аудіо та HUD на події світу
   soundSystem.subscribeToWorld(world)
   hudController.subscribeToWorld(world)
 
   hudController.arenaName = room ? room.name : 'Standard Sector'
   hudController.playerName = lobby ? lobby.playerName : 'Pilot'
 
-  // Кількість початкових астероїдів залежить від складності кімнати
+  // Кількість початкових астероїдів
   const asteroidCount =
     room?.difficulty === 'Extreme' ? 8 : room?.difficulty === 'Hard' ? 6 : 4
 
   for (let i = 0; i < asteroidCount; i++) {
     const spawnPos = world.findSafeSpawnPos(30)
-    const angle = Math.random() * Math.PI * 2
-    const speed = 40 + Math.random() * 60
+    const angle = world.prng.random() * Math.PI * 2
+    const speed = 40 + world.prng.random() * 60
     world.spawn(
       new Asteroid({
         pos: spawnPos,
@@ -145,7 +201,7 @@ function setupWorldForRoom(room) {
     )
   }
 
-  // Спавн демонстраційних бонусів
+  // Спавн бонусів
   world.spawn(
     new Pickup({
       pos: new Vector2(size.w / 2 - 140, size.h / 2 - 80),
@@ -160,16 +216,28 @@ function setupWorldForRoom(room) {
   )
 }
 
-// Стрільба кліком миші та розблокування звуку за першим жестом користувача
+// Стрільба кліком миші та розблокування звуку
 window.addEventListener('click', (e) => {
-  // Розблоковуємо Web Audio API за жестом
   soundSystem.unlock()
 
   if (gameState !== 'playing') return
-  if (e.target.tagName === 'BUTTON' || e.target.closest('#lobby-overlay'))
+  if (
+    e.target.tagName === 'BUTTON' ||
+    e.target.closest('#lobby-overlay') ||
+    e.target.closest('#netgraph-overlay')
+  )
     return
 
-  ship?.fire(world)
+  if (ship && world) {
+    ship.fire(world)
+    gameConnection.sendInput({
+      seq: prediction.seq + 1,
+      tick: 0,
+      thrust: ship.thrust > 0 ? 1 : 0,
+      turn: 0,
+      fire: true,
+    })
+  }
 })
 
 function simulate(dt) {
@@ -177,12 +245,36 @@ function simulate(dt) {
 
   previous = ship.cloneState()
 
-  // Стрільба клавішею Space
-  if (input.isDown('Space')) {
-    ship.fire(world)
+  // Зчитування клавіш введення
+  const left = input.isDown('ArrowLeft') || input.isDown('KeyA')
+  const right = input.isDown('ArrowRight') || input.isDown('KeyD')
+  const thrusting = input.isDown('ArrowUp') || input.isDown('KeyW')
+  const firing = input.isDown('Space')
+
+  const turn = (left ? -1 : 0) + (right ? 1 : 0)
+  const thrust = thrusting ? 1 : 0
+  const fire = firing
+
+  // 1. Клієнтське передбачення (Client-Side Prediction, M2)
+  const inputCmd = {
+    seq: prediction.seq + 1,
+    tick: 0,
+    turn,
+    thrust,
+    fire,
   }
 
-  world.step(dt, input)
+  const seq = prediction.predictStep(inputCmd, dt, world, ship)
+  inputCmd.seq = seq
+
+  // 2. Надсилання вводу на авторитетний сервер (M1 & M4 Binary/JSON)
+  gameConnection.sendInput(inputCmd)
+
+  // 3. Згасання візуального зсуву виправлення (Smoothing, M2)
+  prediction.updateSmoothing(dt)
+
+  // 4. Локальне оновлення симуляції
+  world.step(dt)
   hudController.update(dt)
 
   hideWrapForLerp(previous, ship, size.w, size.h)
@@ -200,13 +292,33 @@ function render(alpha, stats) {
   drawStarfield(ctx, stars)
 
   if (world && ship) {
-    const interpolatedShip = interpolateShip(previous, ship, alpha)
+    // Згладжена візуальна позиція корабля після prediction
+    const renderPos = prediction.getRenderPosition(ship)
+    const renderShip = {
+      ...ship,
+      pos: renderPos,
+      x: renderPos.x,
+      y: renderPos.y,
+      angle: ship.angle,
+      thrust: ship.thrust,
+      hp: ship.hp,
+      maxHp: ship.maxHp,
+      shield: ship.shield,
+      alive: ship.alive,
+      name: ship.name,
+      isLocal: true,
+    }
+
+    // Інтерпольовані сутності з мережі (інші кораблі, ворожі кулі, M3)
+    const remoteEntities = interpolation.getInterpolatedEntities(ship.id)
+
     drawWorldEntities(
       ctx,
       world,
-      interpolatedShip,
+      renderShip,
       loadedAssets?.spritesheet,
       loadedAssets?.frames,
+      remoteEntities,
     )
 
     if (gameState === 'playing') {
@@ -218,14 +330,16 @@ function render(alpha, stats) {
         soundSystem.isUnlocked,
       )
     }
+
+    // Оновлення оверлею Netgraph
+    netgraph.update()
   }
 }
 
 const loop = createLoop({ simulate, render })
 
-// Обробка гарячих клавіш
+// Гарячі клавіші
 window.addEventListener('keydown', (e) => {
-  // Розблокування звуку на будь-яку клавішу
   soundSystem.unlock()
 
   if (e.code === 'Escape' || e.code === 'KeyL') {
@@ -238,6 +352,8 @@ window.addEventListener('keydown', (e) => {
       lobbyView?.hide()
       lobby?.join()
     }
+  } else if (e.code === 'KeyN') {
+    netgraph.toggle()
   } else if (e.code === 'KeyK') {
     runThisExperiment()
   } else if (e.code === 'KeyH') {
@@ -265,19 +381,19 @@ window.addEventListener('keydown', (e) => {
   } else if (e.code === 'Digit3') {
     const active = loop.toggleVariableTimestep()
     console.log(`[Lab 01] Variable Step: ${active ? 'ON' : 'OFF'}`)
+  } else if (e.code === 'Digit4') {
+    netgraph.toggle()
   }
 })
 
 /**
- * Головний асинхронний пайплайн запуску додатку (Lab 03)
+ * Головний асинхронний пайплайн запуску додатку
  */
 async function startApplication() {
-  // 1. Показ екрана завантаження
   gameState = 'loading'
   renderLoadingScreen(ctx, size.w, size.h, loadingProgress)
 
   try {
-    // 2. Асинхронне завантаження всіх ассетів через Promise.all
     loadedAssets = await loadAll('/assets/manifest.json', {
       ctx: soundSystem.context,
       onProgress: (info) => {
@@ -286,20 +402,16 @@ async function startApplication() {
       },
     })
 
-    // 3. Збереження декодованих аудіобуферів
     soundSystem.setBuffers(loadedAssets.sounds)
 
-    // 4. Початкове налаштування світу
     setupWorldForRoom({
       id: 'room-alpha',
       name: 'Alpha Outpost (Casual)',
       difficulty: 'Normal',
     })
 
-    // 5. Запуск ігрового циклу
     loop.start()
 
-    // 6. Створення екземпляра моделі лобі та DOM-представлення
     lobby = new Lobby({ apiUrl: '/api/rooms', playerName: 'Star-Pilot' })
 
     lobbyView = new LobbyView(lobby, {
@@ -315,7 +427,7 @@ async function startApplication() {
     lobbyView.show()
 
     console.log(
-      '%c[Dogfight] Lab 03 успішно ініціалізовано: Asset Pipeline, Web Audio, EventTarget Bus, Lobby.',
+      '%c[Dogfight] Lab 05 успішно ініціалізовано: Authoritative Server, Prediction, Reconciliation, Interpolation, DataView.',
       'color: #38bdf8; font-weight: bold; font-size: 13px',
     )
   } catch (err) {
@@ -325,5 +437,4 @@ async function startApplication() {
   }
 }
 
-// Старт
 startApplication()

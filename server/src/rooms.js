@@ -6,6 +6,7 @@
 import { EventEmitter } from 'node:events'
 import { ServerMessageType } from './protocol.js'
 import { MatchLog } from './log/matchlog.js'
+import { Match } from './match.js'
 
 export class Room extends EventEmitter {
   /**
@@ -34,9 +35,16 @@ export class Room extends EventEmitter {
     this.persistent = persistent
     this.createdAt = Date.now()
 
-    /** @type {Map<string, { id: string, name: string, socket: import('ws').WebSocket, joinedAt: number }>} */
+    /** @type {Map<string, { id: string, name: string, socket: import('ws').WebSocket, joinedAt: number, shipId?: number }>} */
     this.players = new Map()
     this.matchLog = new MatchLog(this.id)
+
+    // Авторитетний матч симуляції на 30 Hz (Lab 05)
+    this.match = new Match({
+      room: this,
+      tickRate: 30,
+    })
+    this.match.start()
 
     // Запобігаємо падінню процесу при необроблених error-подіях EventEmitter
     this.on('error', (err) => {
@@ -60,6 +68,7 @@ export class Room extends EventEmitter {
     return Array.from(this.players.values()).map((p) => ({
       id: p.id,
       name: p.name,
+      shipId: p.shipId,
     }))
   }
 
@@ -72,10 +81,15 @@ export class Room extends EventEmitter {
       throw new Error(`Кімната ${this.name} заповнена`)
     }
 
+    // Створюємо корабель у матчі
+    const ship = this.match.addPlayer(player)
+    player.shipId = ship.id
+
     this.players.set(player.id, {
       id: player.id,
       name: player.name,
       socket: player.socket,
+      shipId: ship.id,
       joinedAt: Date.now(),
     })
 
@@ -84,6 +98,7 @@ export class Room extends EventEmitter {
       type: 'player:join',
       playerId: player.id,
       name: player.name,
+      shipId: ship.id,
     })
 
     this.emit('join', player)
@@ -92,6 +107,14 @@ export class Room extends EventEmitter {
     this.sendTo(player.socket, {
       type: ServerMessageType.WELCOME,
       playerId: player.id,
+      shipId: ship.id,
+      tickRate: this.match.tickRate,
+      seed: this.match.seed,
+      arena: {
+        width: this.match.arenaWidth,
+        height: this.match.arenaHeight,
+      },
+      config: this.match.latencyInjector.getConfig(),
       room: {
         id: this.id,
         name: this.name,
@@ -105,7 +128,7 @@ export class Room extends EventEmitter {
     this.broadcast(
       {
         type: ServerMessageType.JOINED,
-        player: { id: player.id, name: player.name },
+        player: { id: player.id, name: player.name, shipId: ship.id },
         roster: this.getRoster(),
       },
       player.id,
@@ -121,6 +144,7 @@ export class Room extends EventEmitter {
     if (!player) return
 
     this.players.delete(playerId)
+    this.match.removePlayer(playerId)
 
     this.matchLog.record({
       type: 'player:leave',
@@ -200,6 +224,7 @@ export class Room extends EventEmitter {
    * Закриття кімнати та збереження логу
    */
   async destroy() {
+    this.match.stop()
     this.broadcast({
       type: ServerMessageType.ERROR,
       message: 'Кімнату закрито сервером',
@@ -221,6 +246,7 @@ export class Room extends EventEmitter {
       players: this.players.size,
       maxPlayers: this.maxPlayers,
       createdAt: this.createdAt,
+      stats: this.match.getStats(),
     }
   }
 }

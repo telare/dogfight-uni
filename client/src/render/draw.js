@@ -83,14 +83,29 @@ export function drawStarfield(ctx, stars) {
   }
 }
 
-export function drawShip(ctx, ship, spritesheet = null, frames = null) {
-  if (!ship || !ship.alive) return
+export function drawShip(
+  ctx,
+  ship,
+  spritesheet = null,
+  frames = null,
+  isLocal = true,
+) {
+  if (!ship || (!ship.alive && ship.hp <= 0)) return
 
   const x = ship.pos ? ship.pos.x : ship.x
   const y = ship.pos ? ship.pos.y : ship.y
 
   ctx.save()
   ctx.translate(x, y)
+
+  // Підпис позивного пілота над кораблем (Lab 05)
+  if (ship.name) {
+    ctx.font = 'bold 10px ui-monospace, monospace'
+    ctx.fillStyle = isLocal ? '#38bdf8' : '#f43f5e'
+    ctx.textAlign = 'center'
+    ctx.fillText(ship.name, 0, -24)
+  }
+
   ctx.rotate(ship.angle)
 
   if (spritesheet && frames?.ship) {
@@ -130,9 +145,9 @@ export function drawShip(ctx, ship, spritesheet = null, frames = null) {
       ctx.fill()
     }
 
-    // Корпус корабля
-    ctx.fillStyle = '#f3f4f6'
-    ctx.strokeStyle = '#38bdf8'
+    // Корпус корабля: синій для свого, червоний для чужого пілота
+    ctx.fillStyle = isLocal ? '#f3f4f6' : '#ffe4e6'
+    ctx.strokeStyle = isLocal ? '#38bdf8' : '#f43f5e'
     ctx.lineWidth = 2
     ctx.beginPath()
     ctx.moveTo(18, 0)
@@ -144,7 +159,7 @@ export function drawShip(ctx, ship, spritesheet = null, frames = null) {
     ctx.stroke()
 
     // Кабіна
-    ctx.fillStyle = '#0284c7'
+    ctx.fillStyle = isLocal ? '#0284c7' : '#e11d48'
     ctx.beginPath()
     ctx.arc(0, 0, 3.5, 0, Math.PI * 2)
     ctx.fill()
@@ -152,8 +167,12 @@ export function drawShip(ctx, ship, spritesheet = null, frames = null) {
 
   // Силовий щит (якщо активний)
   if (ship.shield > 0) {
-    ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 + Math.sin(performance.now() * 0.01) * 0.2})`
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.12)'
+    ctx.strokeStyle = isLocal
+      ? `rgba(56, 189, 248, ${0.4 + Math.sin(performance.now() * 0.01) * 0.2})`
+      : `rgba(244, 63, 94, ${0.4 + Math.sin(performance.now() * 0.01) * 0.2})`
+    ctx.fillStyle = isLocal
+      ? 'rgba(56, 189, 248, 0.12)'
+      : 'rgba(244, 63, 94, 0.12)'
     ctx.lineWidth = 2.5
     ctx.beginPath()
     ctx.arc(0, 0, 24, 0, Math.PI * 2)
@@ -403,12 +422,14 @@ export function drawWorldEntities(
   interpolatedShip,
   spritesheet = null,
   frames = null,
+  remoteEntities = [],
 ) {
+  // 1. Відмальовуємо локальні сутності (передбачений корабель гравця, локальні кулі, вибухи)
   for (const entity of world) {
     if (!entity.alive) continue
 
     if (entity.kind === 'ship') {
-      drawShip(ctx, interpolatedShip || entity, spritesheet, frames)
+      drawShip(ctx, interpolatedShip || entity, spritesheet, frames, true)
     } else if (entity.kind === 'bullet') {
       drawBullet(ctx, entity, spritesheet, frames)
     } else if (entity.kind === 'asteroid') {
@@ -417,6 +438,25 @@ export function drawWorldEntities(
       drawPickup(ctx, entity, spritesheet, frames)
     } else if (entity.kind === 'explosion') {
       drawExplosion(ctx, entity)
+    }
+  }
+
+  // 2. Відмальовуємо інтерпольовані сутності з мережі (інші пілоти, мережеві астероїди, снаряди)
+  if (Array.isArray(remoteEntities)) {
+    for (const remote of remoteEntities) {
+      if (remote.kind === 'ship') {
+        drawShip(ctx, remote, spritesheet, frames, false)
+      } else if (remote.kind === 'bullet') {
+        drawBullet(ctx, remote, spritesheet, frames)
+      } else if (remote.kind === 'asteroid') {
+        if (!world.has(remote.id)) {
+          drawAsteroid(ctx, remote, spritesheet, frames)
+        }
+      } else if (remote.kind === 'pickup') {
+        if (!world.has(remote.id)) {
+          drawPickup(ctx, remote, spritesheet, frames)
+        }
+      }
     }
   }
 }

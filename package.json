@@ -5,7 +5,8 @@
   "type": "module",
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "shared"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=client",
@@ -15,16 +16,20 @@
     "build": "npm run build --workspace=client",
     "preview": "npm run preview --workspace=client",
     "test": "node --test server/test/*.test.js",
-    "lint": "eslint client/src server/src",
-    "format": "prettier --write client/src server/src client/index.html"
+    "lint": "eslint client/src server/src shared/src",
+    "format": "prettier --write client/src server/src shared/src client/index.html"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.0.1",
     "globals": "^15.15.0",
     "prettier": "^3.5.1",
-    "vite": "^6.1.0"
+    "typescript": "^7.0.2",
+    "vite": "^6.1.0",
+    "zod": "^4.6.5"
   },
   "dependencies": {
     "ws": "^8.18.0"

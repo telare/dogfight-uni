@@ -493,3 +493,226 @@ body {
   border-color: #38bdf8;
   box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
 }
+
+/* ==========================================================================
+   LAB 05 — NETGRAPH & REALTIME TELEMETRY OVERLAY STYLES
+   ========================================================================== */
+
+.netgraph-overlay {
+  position: fixed;
+  right: 14px;
+  top: 14px;
+  width: 300px;
+  z-index: 10000;
+  font-family: 'Consolas', 'Courier New', monospace;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.netgraph-card {
+  background: rgba(10, 15, 29, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(56, 189, 248, 0.15);
+  backdrop-filter: blur(8px);
+  padding: 10px 12px;
+  color: #f1f5f9;
+}
+
+.netgraph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.netgraph-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.netgraph-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #38bdf8;
+}
+
+.badge-binary {
+  font-size: 9px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badge-json {
+  font-size: 9px;
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.ng-btn-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.ng-btn-close:hover {
+  color: #f87171;
+}
+
+.ng-chart-canvas {
+  width: 100%;
+  height: 44px;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ng-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.1);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+}
+
+.ng-metric-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.ng-label {
+  color: #94a3b8;
+}
+
+.ng-val {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.ng-highlight {
+  color: #38bdf8;
+}
+
+.ng-alert {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.ng-controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid rgba(56, 189, 248, 0.15);
+  padding-top: 6px;
+}
+
+.ng-toggles-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.ng-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: #cbd5e1;
+}
+
+.ng-toggle-label input {
+  cursor: pointer;
+  accent-color: #38bdf8;
+}
+
+.ng-btn-toggle {
+  width: 100%;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ng-btn-toggle:hover {
+  background: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+.ng-sliders-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.ng-slider-row {
+  display: flex;
+  flex-direction: column;
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+.ng-slider-row input[type='range'] {
+  width: 100%;
+  height: 3px;
+  accent-color: #38bdf8;
+  cursor: pointer;
+  margin: 3px 0 2px 0;
+}
+
+.ng-action-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.ng-btn-action {
+  flex: 1;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ng-btn-action:hover {
+  background: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}

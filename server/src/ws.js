@@ -16,12 +16,13 @@ import {
   ServerMessageType,
   validateClientMessage,
 } from './protocol.js'
+import { decodeAnyBinary, encodePong } from 'shared'
 
 /**
  * Простий алгоритм Token Bucket для обмеження швидкості повідомлень
  */
 class TokenBucket {
-  constructor(rate = 15, capacity = 20) {
+  constructor(rate = 60, capacity = 100) {
     this.rate = rate
     this.capacity = capacity
     this.tokens = capacity
@@ -106,8 +107,51 @@ export function attachWebSocketServer(httpServer, { roomManager, config }) {
     }, config.JOIN_TIMEOUT_MS)
     joinTimer.unref()
 
-    // 2. Обробник вхідних повідомлень
-    socket.on('message', (rawData) => {
+    // 2. Обробник вхідних повідомлень (Binary DataView або JSON)
+    socket.on('message', (rawData, isBinary) => {
+      // 2.1 Перевірка та обробка бінарних повідомлень (DataView, Lab 05 M4)
+      const isBin =
+        isBinary ||
+        (Buffer.isBuffer(rawData) &&
+          rawData.length >= 2 &&
+          rawData[1] === 1 &&
+          (rawData[0] === 1 || rawData[0] === 3 || rawData[0] === 5))
+
+      if (isBin) {
+        try {
+          const binMsg = decodeAnyBinary(rawData)
+          if (binMsg.type === 'input') {
+            if (socket.currentRoom) {
+              socket.currentRoom.match.queueInput(socket.playerId, binMsg)
+            }
+            return
+          }
+          if (binMsg.type === 'ping') {
+            const pongBuffer = encodePong(binMsg.clientTime, Date.now())
+            if (socket.currentRoom) {
+              socket.currentRoom.match.latencyInjector.deliver(() => {
+                if (socket.readyState === 1) socket.send(pongBuffer)
+              })
+            } else {
+              socket.send(pongBuffer)
+            }
+            return
+          }
+          if (binMsg.type === 'config') {
+            if (socket.currentRoom) {
+              socket.currentRoom.match.latencyInjector.updateConfig(binMsg)
+              if (binMsg.codec) socket.currentRoom.match.codec = binMsg.codec
+            }
+            return
+          }
+        } catch (err) {
+          console.warn(
+            `[WS Binary Decode Error] ${socket.playerId}:`,
+            err.message,
+          )
+        }
+      }
+
       // Перевірка Backpressure для повільних клієнтів (Slow-Client Policy)
       if (socket.bufferedAmount > config.BUFFERED_AMOUNT_THRESHOLD) {
         console.warn(
@@ -180,6 +224,15 @@ export function attachWebSocketServer(httpServer, { roomManager, config }) {
           )
           socket.close(CloseCode.POLICY_VIOLATION, err.message)
         }
+      } else if (msg.type === ClientMessageType.INPUT) {
+        if (socket.currentRoom) {
+          socket.currentRoom.match.queueInput(socket.playerId, msg)
+        }
+      } else if (msg.type === ClientMessageType.CONFIG) {
+        if (socket.currentRoom) {
+          socket.currentRoom.match.latencyInjector.updateConfig(msg)
+          if (msg.codec) socket.currentRoom.match.codec = msg.codec
+        }
       } else if (msg.type === ClientMessageType.CHAT) {
         if (!socket.currentRoom) {
           socket.send(
@@ -198,7 +251,19 @@ export function attachWebSocketServer(httpServer, { roomManager, config }) {
         }
         socket.close(CloseCode.NORMAL, 'Player left')
       } else if (msg.type === ClientMessageType.PING) {
-        socket.send(JSON.stringify({ type: ServerMessageType.PONG }))
+        const clientTime = msg.clientTime || Date.now()
+        const pong = JSON.stringify({
+          type: ServerMessageType.PONG,
+          clientTime,
+          serverTime: Date.now(),
+        })
+        if (socket.currentRoom) {
+          socket.currentRoom.match.latencyInjector.deliver(() => {
+            if (socket.readyState === 1) socket.send(pong)
+          })
+        } else {
+          socket.send(pong)
+        }
       }
     })
 
