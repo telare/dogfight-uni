@@ -8,11 +8,11 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import { WebSocket } from 'ws'
-import { server, roomManager, wss } from '../src/index.js'
-import { config } from '../src/config.js'
-import { validateClientMessage, CloseCode } from '../src/protocol.js'
-import { MatchLog } from '../src/log/matchlog.js'
-import { createReplayEvents } from '../src/log/replay.js'
+import { server, roomManager, wss } from '../src/index.ts'
+import { config } from '../src/config.ts'
+import { validateClientMessage, CloseCode } from '../src/protocol.ts'
+import { MatchLog } from '../src/log/matchlog.ts'
+import { createReplayEvents } from '../src/log/replay.ts'
 
 describe('Dogfight Server Test Suite', () => {
   let serverPort = 0

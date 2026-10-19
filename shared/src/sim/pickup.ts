@@ -1,14 +1,17 @@
-import { Entity } from './entity.js'
-import { Vector2 } from './vector.js'
+import type { PickupData } from '../protocol/protocol.ts'
+import { Entity } from './entity.ts'
+import { Vector2 } from './vector.ts'
 import {
   createPickupEffect,
   type PickupType,
   type PickupEffect,
-} from './components.js'
-import type { Ship } from './ship.js'
-import type { World } from './world.js'
+} from './components.ts'
+import type { Ship } from './ship.ts'
+import type { World } from './world.ts'
 
 export class Pickup extends Entity {
+  override readonly kind = 'pickup'
+
   readonly type: PickupType
   ttl: number
   pulse: number
@@ -18,7 +21,7 @@ export class Pickup extends Entity {
     id = null,
     pos,
     vel = Vector2.zero(),
-    type = 'shield' as PickupType,
+    type = 'shield',
     ttl = 20,
     alive = true,
   }: {
@@ -39,7 +42,7 @@ export class Pickup extends Entity {
       alive,
     })
 
-    this.type = type as PickupType
+    this.type = type
     this.ttl = ttl
     this.pulse = 0
 
@@ -66,22 +69,23 @@ export class Pickup extends Entity {
     }
   }
 
-  override serialize(): Record<string, unknown> {
+  override serialize(): PickupData {
     return {
       ...super.serialize(),
+      kind: 'pickup',
       type: this.type,
       ttl: this.ttl,
     }
   }
 
-  static fromSnapshot(data: Record<string, unknown>): Pickup {
+  static fromSnapshot(data: PickupData): Pickup {
     return new Pickup({
-      id: data['id'] as number,
-      pos: new Vector2(data['x'] as number, data['y'] as number),
-      vel: new Vector2(data['vx'] as number, data['vy'] as number),
-      type: (data['type'] as PickupType | undefined) ?? 'shield',
-      ttl: (data['ttl'] as number | undefined) ?? 20,
-      alive: data['alive'] !== false,
+      id: data.id,
+      pos: new Vector2(data.x, data.y),
+      vel: new Vector2(data.vx, data.vy),
+      type: data.type ?? 'shield',
+      ttl: data.ttl ?? 20,
+      alive: data.alive !== false,
     })
   }
 }

@@ -4,8 +4,8 @@
 
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { Match } from '../src/match.js'
-import { LatencyInjector } from '../src/latency.js'
+import { Match } from '../src/match.ts'
+import { LatencyInjector } from '../src/latency.ts'
 
 describe('Lab 05: Авторитетний матч та мережеві компоненти (server/match)', () => {
   it('1. LatencyInjector коректно додає штучну затримку та симулює втрату пакетів', async () => {

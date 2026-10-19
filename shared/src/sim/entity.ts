@@ -1,93 +1,27 @@
-import { Vector2 } from './vector.js'
-
-// ── Брендовані типи ────────────────────────────────────────────────────────
-// Branded types попереджують змішування EntityId, Tick, Seq на рівні компілятора.
-// Вартість: нуль байт у runtime (тип стирається), але compile-time safety.
-// Приклад помилки без brand: передав tick туди, де очікувався EntityId.
-export type EntityId = number & { readonly __brand: 'EntityId' }
-export type Tick = number & { readonly __brand: 'Tick' }
-export type Seq = number & { readonly __brand: 'Seq' }
-
-/** Конструктор-санітайзер для EntityId (as-cast виправданий — вхід вже перевірено) */
-export function asEntityId(n: number): EntityId {
-  // as EntityId є виправданим: ми гарантуємо цілочисельність > 0
-  return n as EntityId
-}
-
-export function asTick(n: number): Tick {
-  return n as Tick
-}
-
-export function asSeq(n: number): Seq {
-  return n as Seq
-}
-
-// ── Типи знімка сутностей (discriminated union) ────────────────────────────
-export interface BaseEntityData {
-  readonly id: EntityId
-  readonly x: number
-  readonly y: number
-  readonly vx: number
-  readonly vy: number
-  readonly angle: number
-  readonly hp: number
-  readonly shield: number
-  readonly alive: boolean
-}
-
-export interface ShipData extends BaseEntityData {
-  readonly kind: 'ship'
-  readonly playerId: string | null
-  readonly name: string
-  readonly thrust: number
-  readonly score: number
-  readonly radius: number
-}
-
-export interface BulletData extends BaseEntityData {
-  readonly kind: 'bullet'
-  readonly ownerId: EntityId | null
-  readonly damage: number
-  readonly ttl: number
-  readonly isHoming: number
-  readonly radius: number
-}
-
-export interface AsteroidData extends BaseEntityData {
-  readonly kind: 'asteroid'
-  readonly tier: 1 | 2
-  readonly rotSpeed: number
-  readonly radius: number
-}
-
-export interface PickupData extends BaseEntityData {
-  readonly kind: 'pickup'
-  readonly type: 'shield' | 'rapid' | 'homing' | 'heal'
-  readonly ttl: number
-  readonly radius: number
-}
-
-/** Discriminated union — звужується за полем `kind` */
-export type EntityData = ShipData | BulletData | AsteroidData | PickupData
-
-export interface SnapshotData {
-  readonly type?: 'snapshot'
-  readonly tick: Tick
-  readonly serverTime: number
-  readonly ackSeq: Seq
-  readonly entities: readonly EntityData[]
-}
-
-// ── Базовий клас Entity ────────────────────────────────────────────────────
+import type { World } from './world.ts'
+export { asEntityId, asTick, asSeq } from '../protocol/protocol.ts'
+export type {
+  EntityId,
+  Tick,
+  Seq,
+  EntityData,
+  ShipData,
+  BulletData,
+  AsteroidData,
+  PickupData,
+  SnapshotData,
+} from '../protocol/protocol.ts'
+import { asEntityId, type EntityId } from '../protocol/protocol.ts'
+import { Vector2 } from './vector.ts'
 
 export interface EntityOptions {
-  id?: EntityId | number | null
-  pos?: Vector2
-  vel?: Vector2
-  angle?: number
-  radius?: number
-  kind?: string
-  alive?: boolean
+  id?: EntityId | number | null | undefined
+  pos?: { readonly x: number; readonly y: number } | undefined
+  vel?: { readonly x: number; readonly y: number } | undefined
+  angle?: number | undefined
+  radius?: number | undefined
+  kind?: string | undefined
+  alive?: boolean | undefined
 }
 
 /**
@@ -125,21 +59,9 @@ export class Entity {
     alive = true,
   }: EntityOptions = {}) {
     this.hasExplicitId = typeof id === 'number' && id > 0
-    this.#id = this.hasExplicitId ? asEntityId(id as number) : null
-    this.pos =
-      pos instanceof Vector2
-        ? pos
-        : new Vector2(
-            (pos as unknown as { x?: number }).x,
-            (pos as unknown as { y?: number }).y,
-          )
-    this.vel =
-      vel instanceof Vector2
-        ? vel
-        : new Vector2(
-            (vel as unknown as { x?: number }).x,
-            (vel as unknown as { y?: number }).y,
-          )
+    this.#id = typeof id === 'number' && id > 0 ? asEntityId(id) : null
+    this.pos = pos instanceof Vector2 ? pos : new Vector2(pos.x, pos.y)
+    this.vel = vel instanceof Vector2 ? vel : new Vector2(vel.x, vel.y)
     this.angle = Number(angle) || 0
     this.radius = Number(radius) || 12
     this.kind = kind
@@ -148,13 +70,13 @@ export class Entity {
 
   get id(): EntityId {
     if (this.#id === null) {
-      // as EntityId justified: Entity.#nextId++ gives sequential integers > 0
-      this.#id = asEntityId(Entity.#nextId++)
+      this.#id = asEntityId(Entity.#nextId)
+      Entity.#nextId = Entity.#nextId === 0xffff ? 1 : Entity.#nextId + 1
     }
     return this.#id
   }
 
-  assignId(id: number): void {
+  assignId(id: EntityId): void {
     if (typeof id === 'number' && id > 0) {
       this.#id = asEntityId(id)
       this.hasExplicitId = true
@@ -162,7 +84,7 @@ export class Entity {
   }
 
   // world parameter intentionally unused in base — subclasses override
-  update(_dt: number, _world: unknown): void {
+  update(_dt: number, _world: World | null): void {
     this.pos = this.pos.add(this.vel.scale(_dt))
   }
 
@@ -170,9 +92,19 @@ export class Entity {
     this.alive = false
   }
 
-  serialize(): Record<string, unknown> {
+  serialize(): Readonly<{
+    id: EntityId
+    kind: string
+    x: number
+    y: number
+    vx: number
+    vy: number
+    angle: number
+    radius?: number
+    alive: boolean
+  }> {
     return {
-      id: this.#id,
+      id: this.id,
       kind: this.kind,
       x: this.pos.x,
       y: this.pos.y,
@@ -182,17 +114,5 @@ export class Entity {
       radius: this.radius,
       alive: this.alive,
     }
-  }
-
-  static fromSnapshot(data: Record<string, unknown>): Entity {
-    return new Entity({
-      id: data['id'] as number,
-      pos: new Vector2(data['x'] as number, data['y'] as number),
-      vel: new Vector2(data['vx'] as number, data['vy'] as number),
-      angle: data['angle'] as number,
-      radius: data['radius'] as number,
-      kind: data['kind'] as string,
-      alive: data['alive'] !== false,
-    })
   }
 }

@@ -4,12 +4,14 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "noEmit": true,
-    "paths": {
-      "shared": ["../shared/src/index.ts"],
-      "shared/*": ["../shared/src/*/index.ts"]
-    }
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "noEmit": true
   },
-  "include": ["src/**/*.ts", "src/**/*.js"]
+  "include": [
+    "src/**/*.ts"
+  ]
 }

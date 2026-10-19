@@ -1,4 +1,4 @@
-import { Vector2 } from './vector.js'
+import { Vector2 } from './vector.ts'
 
 /**
  * Загортання позиції об'єкта при вильоті за межі арени.

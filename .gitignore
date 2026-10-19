@@ -6,3 +6,18 @@ logs/*.ndjson
 *.local
 DEMO_GUIDE.md
 
+# Local one-off TypeScript migration scratch files.
+/client-errors.txt
+/server-errors.txt
+/scripts/annotate.mjs
+/scripts/cleanup-types.py
+/scripts/client-assets.py
+/scripts/client-core.py
+/scripts/client-render.py
+/scripts/client-ui.py
+/scripts/finish-shared.py
+/scripts/migrate-lab06.py
+/scripts/patch-core.py
+/scripts/server-types.py
+/scripts/shared-types.py
+

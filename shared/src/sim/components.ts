@@ -1,6 +1,7 @@
-import { Vector2 } from './vector.js'
-import { Entity } from './entity.js'
-import type { World } from './world.js'
+import { Vector2 } from './vector.ts'
+import { Entity } from './entity.ts'
+import type { World } from './world.ts'
+import type { EntityId } from '../protocol/protocol.ts'
 
 export function normalizeAngleDiff(diff: number): number {
   const tau = Math.PI * 2
@@ -23,7 +24,7 @@ export function createHoming({
   speed = 380,
   maxRange = 900,
 } = {}): HomingComponent {
-  let currentTargetId: number | null = null
+  let currentTargetId: EntityId | null = null
 
   return {
     name: 'homing',
@@ -73,21 +74,25 @@ export interface PickupEffect {
   readonly type: PickupType
   readonly amount: number
   readonly duration: number
-  apply(ship: import('./ship.js').Ship | null | undefined): string | null
+  apply(ship: import('./ship.ts').Ship | null | undefined): string | null
 }
 
 export function createPickupEffect({
-  type = 'shield' as PickupType,
+  type = 'shield',
   amount = 30,
   duration = 8,
+}: {
+  type?: PickupType
+  amount?: number
+  duration?: number
 } = {}): PickupEffect {
   return {
     name: 'pickupEffect',
-    type: type as PickupType,
+    type: type,
     amount,
     duration,
 
-    apply(ship: import('./ship.js').Ship | null | undefined): string | null {
+    apply(ship: import('./ship.ts').Ship | null | undefined): string | null {
       if (!ship?.alive) return null
 
       switch (type) {

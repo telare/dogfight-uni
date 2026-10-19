@@ -1,3 +1,4 @@
-export * from './sim/index.js'
-export * from './protocol/index.js'
-export * from './codec/index.js'
+export * from './sim/index.ts'
+export * from './protocol/index.ts'
+export * from './codec/index.ts'
+export { Bus } from './events.ts'

@@ -1,7 +1,8 @@
-import { Entity } from './entity.js'
-import { Vector2 } from './vector.js'
-import { mulberry32 } from './prng.js'
-import type { World } from './world.js'
+import type { AsteroidData } from '../protocol/protocol.ts'
+import { Entity } from './entity.ts'
+import { Vector2 } from './vector.ts'
+import { mulberry32 } from './prng.ts'
+import type { World } from './world.ts'
 
 export interface AsteroidVertex {
   readonly x: number
@@ -9,6 +10,8 @@ export interface AsteroidVertex {
 }
 
 export class Asteroid extends Entity {
+  override readonly kind = 'asteroid'
+
   #hp: number
 
   readonly tier: 1 | 2
@@ -21,7 +24,7 @@ export class Asteroid extends Entity {
     pos,
     vel = Vector2.zero(),
     angle = 0,
-    tier = 2 as 1 | 2,
+    tier = 2,
     radius,
     rotSpeed = 0.5,
     hp = null,
@@ -84,27 +87,28 @@ export class Asteroid extends Entity {
     this.pos = this.pos.add(this.vel.scale(dt))
   }
 
-  override serialize(): Record<string, unknown> {
+  override serialize(): AsteroidData {
     return {
       ...super.serialize(),
+      kind: 'asteroid',
       tier: this.tier,
       hp: this.#hp,
       rotSpeed: this.rotSpeed,
     }
   }
 
-  static fromSnapshot(data: Record<string, unknown>): Asteroid {
-    const tier = (data['tier'] as number | undefined) === 1 ? 1 : (2 as 1 | 2)
+  static fromSnapshot(data: AsteroidData): Asteroid {
+    const tier = data.tier === 1 ? 1 : 2
     return new Asteroid({
-      id: data['id'] as number,
-      pos: new Vector2(data['x'] as number, data['y'] as number),
-      vel: new Vector2(data['vx'] as number, data['vy'] as number),
-      angle: data['angle'] as number,
+      id: data.id,
+      pos: new Vector2(data.x, data.y),
+      vel: new Vector2(data.vx, data.vy),
+      angle: data.angle,
       tier,
-      radius: (data['radius'] as number | undefined) ?? (tier === 1 ? 18 : 32),
-      rotSpeed: (data['rotSpeed'] as number | undefined) ?? 0.5,
-      hp: data['hp'] as number | null,
-      alive: data['alive'] !== false,
+      radius: data.radius ?? (tier === 1 ? 18 : 32),
+      rotSpeed: data.rotSpeed ?? 0.5,
+      hp: data.hp,
+      alive: data.alive !== false,
     })
   }
 }

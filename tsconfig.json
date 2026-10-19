@@ -1,10 +1,17 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.base.json",
-  "files": [],
-  "references": [
-    { "path": "./shared" },
-    { "path": "./server" },
-    { "path": "./client" }
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+  "include": [
+    "shared/src/**/*.ts",
+    "server/src/**/*.ts",
+    "client/src/**/*.ts"
   ]
 }

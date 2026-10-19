@@ -1,7 +1,8 @@
-import { Entity } from './entity.js'
-import { Vector2 } from './vector.js'
-import { Bullet } from './bullet.js'
-import type { World } from './world.js'
+import type { ShipData } from '../protocol/protocol.ts'
+import { Entity } from './entity.ts'
+import { Vector2 } from './vector.ts'
+import { Bullet } from './bullet.ts'
+import type { World } from './world.ts'
 
 export const ROTATE_SPEED = 3.6
 export const THRUST = 520
@@ -59,6 +60,8 @@ export function integrateShipPhysics(
 }
 
 export class Ship extends Entity {
+  override readonly kind = 'ship'
+
   #hp: number
 
   playerId: string | null
@@ -293,9 +296,10 @@ export class Ship extends Entity {
     this.shieldTimer = 3.0
   }
 
-  override serialize(): Record<string, unknown> {
+  override serialize(): ShipData {
     return {
       ...super.serialize(),
+      kind: 'ship',
       playerId: this.playerId,
       name: this.name,
       hp: this.#hp,
@@ -305,20 +309,20 @@ export class Ship extends Entity {
     }
   }
 
-  static fromSnapshot(data: Record<string, unknown>): Ship {
+  static fromSnapshot(data: ShipData): Ship {
     const ship = new Ship({
-      id: data['id'] as number,
-      pos: new Vector2(data['x'] as number, data['y'] as number),
-      vel: new Vector2(data['vx'] as number, data['vy'] as number),
-      angle: data['angle'] as number,
-      hp: data['hp'] as number,
-      shield: data['shield'] as number,
-      score: (data['score'] as number | undefined) ?? 0,
-      playerId: (data['playerId'] as string | null | undefined) ?? null,
-      name: (data['name'] as string | undefined) ?? 'Pilot',
-      alive: data['alive'] !== false,
+      id: data.id,
+      pos: new Vector2(data.x, data.y),
+      vel: new Vector2(data.vx, data.vy),
+      angle: data.angle,
+      hp: data.hp,
+      shield: data.shield,
+      score: data.score ?? 0,
+      playerId: data.playerId ?? null,
+      name: data.name ?? 'Pilot',
+      alive: data.alive !== false,
     })
-    ship.thrust = data['thrust'] ? THRUST : 0
+    ship.thrust = data.thrust ? THRUST : 0
     return ship
   }
 }

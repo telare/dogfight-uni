@@ -1,29 +1,46 @@
-import { PRNG } from './prng.js'
-import { wrap } from './arena.js'
-import { resolveCollisions } from './collision.js'
-import { Asteroid } from './asteroid.js'
-import { Vector2 } from './vector.js'
-import { Ship } from './ship.js'
-import { Bullet } from './bullet.js'
-import { Pickup } from './pickup.js'
-import type { Entity } from './entity.js'
+import {
+  assertNever,
+  asTick,
+  asSeq,
+  asEntityId,
+  type EntityId,
+  type SnapshotData,
+  type SnapshotState,
+} from '../protocol/protocol.ts'
+import { Bus } from '../events.ts'
+import type { PickupType } from './components.ts'
+import type { ShipInput } from './ship.ts'
+export type GameEntity = Ship | Bullet | Asteroid | Pickup
+import { PRNG } from './prng.ts'
+import { wrap } from './arena.ts'
+import { resolveCollisions } from './collision.ts'
+import { Asteroid } from './asteroid.ts'
+import { Vector2 } from './vector.ts'
+import { Ship } from './ship.ts'
+import { Bullet } from './bullet.ts'
+import { Pickup } from './pickup.ts'
 
-export type WorldEventType =
-  | 'hit'
-  | 'exploded'
-  | 'score'
-  | 'pickup'
-  | 'fired'
-  | 'respawn'
-  | 'collected'
-  | 'destroyed'
-  | string
-
-export type WorldEventCallback = (detail: Record<string, unknown>) => void
+export type WorldEvents = {
+  hit: {
+    targetKind: 'ship' | 'asteroid'
+    sourceKind: 'bullet' | 'asteroid'
+    pos: Vector2
+    damage: number
+  }
+  exploded: { kind: 'ship' | 'asteroid'; pos: Vector2; tier?: 1 | 2 }
+  score: { score: number; delta: number; pos: Vector2 }
+  pickup: { type: PickupType; pos: Vector2 }
+  fired: { kind: 'bullet'; pos: Vector2; ownerId: EntityId; isHoming: boolean }
+  respawn: { shipId: EntityId; pos: Vector2 }
+}
+export type WorldEventType = keyof WorldEvents
+export type WorldEventCallback<K extends WorldEventType = WorldEventType> = (
+  detail: WorldEvents[K],
+) => void
 
 export interface WorldEvent {
   type: WorldEventType
-  detail: Record<string, unknown>
+  detail: WorldEvents[WorldEventType]
 }
 
 export interface WorldOptions {
@@ -37,16 +54,16 @@ export interface WorldOptions {
  * Працює в Node.js та в браузері без DOM, Canvas чи специфічних залежностей.
  */
 export class World {
-  #entities = new Map<number, Entity>()
-  #listeners = new Map<string, Set<WorldEventCallback>>()
+  #entities = new Map<EntityId, GameEntity>()
+  #bus = new Bus<WorldEvents>()
   #nextEntityId = 1
 
   arenaWidth: number
   arenaHeight: number
-  readonly seed: number
-  readonly prng: PRNG
+  seed: number
+  prng: PRNG
   events: WorldEvent[]
-  respawnTimers: Map<number, number>
+  respawnTimers: Map<EntityId, number>
   // Optional: server attaches playerShip reference
   playerShip?: Ship
 
@@ -60,8 +77,15 @@ export class World {
     this.#nextEntityId = 1
   }
 
-  getNextId(): number {
-    return this.#nextEntityId++
+  getNextId(): EntityId {
+    // Reuse vacant wire IDs only after wrapping; never overwrite a live entity.
+    for (let attempts = 0; attempts < 0xffff; attempts++) {
+      const id = asEntityId(this.#nextEntityId)
+      this.#nextEntityId =
+        this.#nextEntityId === 0xffff ? 1 : this.#nextEntityId + 1
+      if (!this.#entities.has(id)) return id
+    }
+    throw new RangeError('World has no available entity IDs')
   }
 
   get size(): number {
@@ -71,69 +95,67 @@ export class World {
   /**
    * Диспетчеризація подій симуляції
    */
-  emit(type: WorldEventType, detail: Record<string, unknown> = {}): void {
+  emit<K extends WorldEventType>(type: K, detail: WorldEvents[K]): void {
     this.events.push({ type, detail })
-    const cbs = this.#listeners.get(type)
-    if (cbs) {
-      for (const cb of cbs) {
-        try {
-          cb(detail)
-        } catch (err: unknown) {
-          console.error(`[World event error ${type}]:`, err)
-        }
+    this.#bus.emit(type, detail)
+  }
+
+  on<K extends WorldEventType>(
+    type: K,
+    callback: WorldEventCallback<K>,
+  ): () => void {
+    return this.#bus.on(type, (detail) => {
+      try {
+        callback(detail)
+      } catch (err: unknown) {
+        console.error(`[World event error ${type}]:`, err)
       }
-    }
+    })
   }
 
-  on(type: string, callback: WorldEventCallback): () => void {
-    if (!this.#listeners.has(type)) {
-      this.#listeners.set(type, new Set())
-    }
-    this.#listeners.get(type)!.add(callback)
-    // as non-null justified: we just set it above
-    return () => this.#listeners.get(type)?.delete(callback)
-  }
-
-  addEventListener(
-    type: string,
-    listener: (e: { type: string; detail: Record<string, unknown> }) => void,
+  addEventListener<K extends WorldEventType>(
+    type: K,
+    listener: (e: { type: K; detail: WorldEvents[K] }) => void,
   ): () => void {
     return this.on(type, (detail) => {
       listener({ type, detail })
     })
   }
 
-  dispatchEvent(event: {
-    type: string
-    detail?: Record<string, unknown>
+  dispatchEvent<K extends WorldEventType>(event: {
+    type: K
+    detail: WorldEvents[K]
   }): boolean {
-    this.emit(event.type, event.detail ?? {})
+    this.emit(event.type, event.detail)
     return true
   }
 
-  spawn(entity: Entity): Entity {
+  spawn<T extends GameEntity>(entity: T): T {
     if (!entity) {
       throw new Error('World.spawn: Entity must be provided')
     }
     if (!entity.hasExplicitId) {
-      entity.assignId(this.#nextEntityId++)
+      entity.assignId(this.getNextId())
     }
+    const existing = this.#entities.get(entity.id)
+    if (existing && existing !== entity)
+      throw new Error(`Entity ID ${entity.id} is already in use`)
     this.#entities.set(entity.id, entity)
     return entity
   }
 
-  despawn(id: number): void {
+  despawn(id: EntityId): void {
     const entity = this.#entities.get(id)
     if (entity) {
       entity.alive = false
     }
   }
 
-  get(id: number): Entity | undefined {
+  get(id: EntityId): GameEntity | undefined {
     return this.#entities.get(id)
   }
 
-  has(id: number): boolean {
+  has(id: EntityId): boolean {
     return this.#entities.has(id)
   }
 
@@ -143,11 +165,11 @@ export class World {
     this.respawnTimers.clear()
   }
 
-  *[Symbol.iterator](): IterableIterator<Entity> {
+  *[Symbol.iterator](): IterableIterator<GameEntity> {
     yield* this.#entities.values()
   }
 
-  *ofKind(kind: string): IterableIterator<Entity> {
+  *ofKind(kind: string): IterableIterator<GameEntity> {
     for (const entity of this.#entities.values()) {
       if (entity.kind === kind) {
         yield entity
@@ -235,9 +257,7 @@ export class World {
   step(
     dt = 1 / 30,
     inputsMap:
-      | Map<number | string, Record<string, unknown>>
-      | Record<string, unknown>
-      | null = null,
+      Map<number | string, ShipInput> | Record<string, ShipInput> | null = null,
   ): void {
     this.events = []
 
@@ -245,26 +265,18 @@ export class World {
       if (!entity.alive) continue
 
       if (entity.kind === 'ship') {
-        let input: Record<string, unknown> | null = null
+        let input: ShipInput | null = null
         if (inputsMap) {
           if (inputsMap instanceof Map) {
             input =
               inputsMap.get(entity.id) ??
               inputsMap.get(entity.id.toString()) ??
               null
-          } else if (typeof inputsMap === 'object') {
-            input =
-              ((inputsMap as Record<string, unknown>)[entity.id] as Record<
-                string,
-                unknown
-              >) ??
-              ((inputsMap as Record<string, unknown>)[
-                entity.id.toString()
-              ] as Record<string, unknown>) ??
-              null
+          } else {
+            input = inputsMap[entity.id] ?? null
           }
         }
-        ;(entity as Ship).stepInput(input ?? {}, dt, this)
+        entity.stepInput(input ?? {}, dt, this)
       } else {
         entity.update(dt, this)
       }
@@ -292,8 +304,8 @@ export class World {
         this.respawnTimers.delete(shipId)
         const ship = this.#entities.get(shipId)
         if (ship?.kind === 'ship') {
-          const safePos = this.findSafeSpawnPos((ship as Ship).radius)
-          ;(ship as Ship).respawn(safePos)
+          const safePos = this.findSafeSpawnPos(ship.radius)
+          ship.respawn(safePos)
           this.emit('respawn', { shipId, pos: safePos.clone() })
         }
       } else {
@@ -313,33 +325,24 @@ export class World {
   /**
    * Створення повного знімка стану для клієнтів
    */
-  getSnapshot(
-    tick = 0,
-    serverTime = Date.now(),
-    ackSeq = 0,
-  ): {
-    tick: number
-    serverTime: number
-    ackSeq: number
-    entities: Record<string, unknown>[]
-  } {
-    const entities: Record<string, unknown>[] = []
+  getSnapshot(tick = 0, serverTime = Date.now(), ackSeq = 0): SnapshotState {
+    const entities: SnapshotData['entities'][number][] = []
     for (const entity of this.#entities.values()) {
       if (entity.alive) {
         entities.push(entity.serialize())
       }
     }
-    return { tick, serverTime, ackSeq, entities }
+    return { tick: asTick(tick), serverTime, ackSeq: asSeq(ackSeq), entities }
   }
 
   /**
    * Відновлення стану з наданого знімка
    */
-  loadSnapshot(snapshot: { entities?: Record<string, unknown>[] }): void {
+  loadSnapshot(snapshot: Pick<SnapshotData, 'entities'>): void {
     this.#entities.clear()
     for (const data of snapshot.entities ?? []) {
-      let entity: Entity | null = null
-      switch (data['kind']) {
+      let entity: GameEntity | null = null
+      switch (data.kind) {
         case 'ship':
           entity = Ship.fromSnapshot(data)
           break
@@ -353,8 +356,7 @@ export class World {
           entity = Pickup.fromSnapshot(data)
           break
         default: {
-          // Unknown kinds are skipped — no need for never since kind comes from wire data
-          entity = null
+          assertNever(data)
         }
       }
       if (entity) {

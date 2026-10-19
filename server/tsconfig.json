@@ -4,13 +4,15 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022"],
-    "types": ["node"],
-    "noEmit": true,
-    "paths": {
-      "shared": ["../shared/src/index.ts"],
-      "shared/*": ["../shared/src/*/index.ts"]
-    }
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node"
+    ],
+    "noEmit": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts"
+  ]
 }

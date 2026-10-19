@@ -17,7 +17,7 @@ import {
   World,
   Vector2,
 } from 'shared'
-import { server, roomManager, wss } from '../server/src/index.js'
+import { server, roomManager, wss } from '../server/src/index.ts'
 
 async function runDogfightVerification() {
   console.log('='.repeat(70))

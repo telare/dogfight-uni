@@ -2,11 +2,11 @@ import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadAll } from '../src/assets/loader.js'
+import { loadAll } from '../client/src/assets/loader.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '..')
-const publicDir = path.join(rootDir, 'public')
+const publicDir = path.join(rootDir, 'client', 'public')
 
 // Mock Web Audio Context & Image for Node.js
 if (typeof globalThis.Image === 'undefined') {

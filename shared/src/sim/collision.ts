@@ -1,10 +1,10 @@
-import { Asteroid } from './asteroid.js'
-import { Pickup } from './pickup.js'
-import { Vector2 } from './vector.js'
-import type { Entity } from './entity.js'
-import type { World } from './world.js'
-import type { Bullet } from './bullet.js'
-import type { Ship } from './ship.js'
+import { Asteroid } from './asteroid.ts'
+import type { PickupType } from './components.ts'
+import { Pickup } from './pickup.ts'
+import { Vector2 } from './vector.ts'
+import type { GameEntity, World } from './world.ts'
+import type { Bullet } from './bullet.ts'
+import type { Ship } from './ship.ts'
 
 export function circlesIntersect(
   posA: Vector2,
@@ -16,10 +16,12 @@ export function circlesIntersect(
   return posA.distSq(posB) <= rSum * rSum
 }
 
-export function findCollisionsNaive(world: World): [Entity, Entity][] {
+export type CollisionPair = [GameEntity, GameEntity]
+
+export function findCollisionsNaive(world: World): CollisionPair[] {
   const entities = Array.from(world)
   const len = entities.length
-  const pairs: [Entity, Entity][] = []
+  const pairs: CollisionPair[] = []
 
   for (let i = 0; i < len; i++) {
     const a = entities[i]
@@ -40,7 +42,9 @@ export function findCollisionsNaive(world: World): [Entity, Entity][] {
 
 export function resolveCollisions(
   world: World,
-  collisionDetector: (world: World) => [Entity, Entity][] = findCollisionsNaive,
+  collisionDetector: (
+    world: World,
+  ) => [GameEntity, GameEntity][] = findCollisionsNaive,
 ): void {
   const pairs = collisionDetector(world)
 
@@ -50,7 +54,7 @@ export function resolveCollisions(
   }
 }
 
-function handleCollisionPair(world: World, a: Entity, b: Entity): void {
+function handleCollisionPair(world: World, a: GameEntity, b: GameEntity): void {
   let ship: Ship | null = null
   let bullet: Bullet | null = null
   let asteroid: Asteroid | null = null
@@ -59,14 +63,14 @@ function handleCollisionPair(world: World, a: Entity, b: Entity): void {
   const entities = [a, b]
   for (const e of entities) {
     if (e.kind === 'ship') {
-      if (ship === null) ship = e as Ship
+      if (ship === null) ship = e
       else {
-        handleShipVsShip(a as Ship, b as Ship)
+        handleShipVsShip(ship, e)
         return
       }
-    } else if (e.kind === 'bullet') bullet = e as Bullet
-    else if (e.kind === 'asteroid') asteroid = e as Asteroid
-    else if (e.kind === 'pickup') pickup = e as Pickup
+    } else if (e.kind === 'bullet') bullet = e
+    else if (e.kind === 'asteroid') asteroid = e
+    else if (e.kind === 'pickup') pickup = e
   }
 
   // 1. Куля влучає в астероїд
@@ -90,7 +94,7 @@ function handleCollisionPair(world: World, a: Entity, b: Entity): void {
       const owner =
         bullet.ownerId !== null ? world.get(bullet.ownerId) : undefined
       if (owner?.kind === 'ship') {
-        const ownerShip = owner as Ship
+        const ownerShip = owner
         const delta = asteroid.tier === 2 ? 100 : 50
         ownerShip.score += delta
         world.emit?.('score', {
@@ -119,7 +123,12 @@ function handleCollisionPair(world: World, a: Entity, b: Entity): void {
 
       const shouldSpawnPickup = world.prng ? world.prng.random() < 0.4 : false
       if (shouldSpawnPickup && world.prng) {
-        const types = ['shield', 'rapid', 'homing', 'heal'] as const
+        const types = [
+          'shield',
+          'rapid',
+          'homing',
+          'heal',
+        ] satisfies PickupType[]
         const randomType =
           types[world.prng.randInt(0, types.length)] ?? 'shield'
         world.spawn(
@@ -152,7 +161,7 @@ function handleCollisionPair(world: World, a: Entity, b: Entity): void {
         const shooter =
           bullet.ownerId !== null ? world.get(bullet.ownerId) : undefined
         if (shooter?.kind === 'ship') {
-          const shooterShip = shooter as Ship
+          const shooterShip = shooter
           shooterShip.score += 250
           world.emit?.('score', {
             score: shooterShip.score,

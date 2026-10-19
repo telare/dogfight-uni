@@ -1,12 +1,19 @@
-import { Entity } from './entity.js'
-import { Vector2 } from './vector.js'
-import type { World } from './world.js'
+import {
+  asEntityId,
+  type EntityId,
+  type BulletData,
+} from '../protocol/protocol.ts'
+import { Entity } from './entity.ts'
+import { Vector2 } from './vector.ts'
+import type { World } from './world.ts'
 
 export class Bullet extends Entity {
+  override readonly kind = 'bullet'
+
   ttl: number
   readonly maxTtl: number
   readonly damage: number
-  ownerId: number | null
+  ownerId: EntityId | null
   isHoming: boolean
   isPredicted: boolean
 
@@ -44,7 +51,7 @@ export class Bullet extends Entity {
     this.ttl = ttl
     this.maxTtl = ttl
     this.damage = damage
-    this.ownerId = ownerId
+    this.ownerId = ownerId === null ? null : asEntityId(ownerId)
     this.isHoming = Boolean(isHoming)
     this.isPredicted = false
   }
@@ -85,9 +92,10 @@ export class Bullet extends Entity {
     }
   }
 
-  override serialize(): Record<string, unknown> {
+  override serialize(): BulletData {
     return {
       ...super.serialize(),
+      kind: 'bullet',
       ownerId: this.ownerId,
       damage: this.damage,
       ttl: this.ttl,
@@ -95,17 +103,17 @@ export class Bullet extends Entity {
     }
   }
 
-  static fromSnapshot(data: Record<string, unknown>): Bullet {
+  static fromSnapshot(data: BulletData): Bullet {
     return new Bullet({
-      id: data['id'] as number,
-      pos: new Vector2(data['x'] as number, data['y'] as number),
-      vel: new Vector2(data['vx'] as number, data['vy'] as number),
-      angle: data['angle'] as number,
-      ownerId: (data['ownerId'] as number | null) ?? null,
-      damage: (data['damage'] as number | undefined) ?? 40,
-      ttl: (data['ttl'] as number | undefined) ?? 1.4,
-      isHoming: Boolean(data['isHoming']),
-      alive: data['alive'] !== false,
+      id: data.id,
+      pos: new Vector2(data.x, data.y),
+      vel: new Vector2(data.vx, data.vy),
+      angle: data.angle,
+      ownerId: data.ownerId ?? null,
+      damage: data.damage ?? 40,
+      ttl: data.ttl ?? 1.4,
+      isHoming: Boolean(data.isHoming),
+      alive: data.alive !== false,
     })
   }
 }
