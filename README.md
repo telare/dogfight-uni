@@ -1,357 +1,367 @@
-# Лабораторна робота 6. TypeScript: спільні контракти, строга типізація та перевірка мережевих даних
+# Dogfight — a guide for React developers
 
-> Курс: **JavaScript — за семестр будуємо мультиплеєрну браузерну гру в реальному часі**  
-> Викладач: Роман Ігорович Малькевич  
-> Студент: індивідуальна робота  
-> Тег: `lab-06` (попередній: `lab-05`)
+Dogfight is a browser space game built across six JavaScript university labs. You steer a ship, shoot, dodge asteroids, collect pickups, and share an arena with other players. The current version uses **TypeScript, Canvas 2D, Vite, Node.js, WebSockets, and Zod**.
 
----
+If you know React, the familiar parts are forms, asynchronous loading, UI state, and subscriptions. The new part is a simulation that advances continuously. The browser predicts movement for immediate feedback; the server runs the authoritative match and sends state back to each player. The current UI uses vanilla DOM and Canvas; React is a useful reference for understanding its architecture.
 
-## Lab 06 — виконання M1–M4
+![Two players fighting with artificial network latency](docs/dogfight-two-players.gif)
 
-Завдання: [lab-06.md](lab-06.md). Теорія: [lab-06.notes.md](lab-06.notes.md).
-Клієнт, сервер і спільна симуляція перенесені на TypeScript. Усі три пакети
-успадковують `strict`, `noUncheckedIndexedAccess` та `verbatimModuleSyntax` із
-`tsconfig.base.json`. Сервер запускається через `tsx`, клієнт збирається Vite.
+## Contents
 
-| Етап | Реалізація |
-|---|---|
-| M1 | Єдина симуляція в `shared/src/sim/`, readonly-вектори й знімки, бренди `EntityId`, `Tick`, `Seq` |
-| M2 | Zod-схеми → виведені типи → Result-парсери в `shared/src/protocol/protocol.ts`; JSON/Binary `Codec`; перевірки довжини, версії, діапазонів і прапорців |
-| M3 | Повна TS-міграція; typed `Room` і `Bus<GameEvents>`; типізовані події World; Zod-конфігурація; CI перевіряє типи, lint, тести й збірку |
-| M4 | Рішення щодо UI-фреймворку, знайдені проблеми та пояснення трьох типів нижче |
+- [Run the project](#run-the-project)
+- [Play and inspect it](#play-and-inspect-it)
+- [Architecture](#architecture)
+- [Translate React concepts](#translate-react-concepts)
+- [Application lifecycle](#application-lifecycle)
+- [The game loop](#the-game-loop)
+- [A keypress across the network](#a-keypress-across-the-network)
+- [Shared simulation and contracts](#shared-simulation-and-contracts)
+- [API and configuration](#api-and-configuration)
+- [Making changes](#making-changes)
+- [Checks and troubleshooting](#checks-and-troubleshooting)
+- [Lab versions and reports](#lab-versions-and-reports)
 
-### Запуск і перевірка
+## Run the project
 
-Потрібні Node.js 22 та npm. Із кореня репозиторію:
+Use **Node.js 22 and npm**. Run commands from the repository root. npm workspaces install and link all three packages, so separate installs inside them are unnecessary.
 
 ```bash
 npm ci
+```
+
+Start the backend in one terminal:
+
+```bash
+npm run dev:server
+```
+
+Start Vite in a second terminal:
+
+```bash
+npm run dev:client
+```
+
+Open **http://localhost:5173**, or the URL printed by Vite if that port is occupied. The backend listens on **3000** by default. `npm run dev` also starts the client; the server still needs its own terminal.
+
+During development, [Vite](client/vite.config.js) proxies `/api` and `/ws` to `127.0.0.1:3000`. The browser derives its socket URL from the current page host, so requests and WebSocket traffic go through Vite.
+
+To serve the built frontend from Node:
+
+```bash
+npm run build
+npm start
+```
+
+Open **http://localhost:3000**. The build produces `client/dist`; Node serves it alongside the API and socket endpoint. `npm start` runs server TypeScript through `tsx` and needs installed dependencies. `npm run preview` previews the client build; use `npm start` for the combined app.
+
+## Play and inspect it
+
+1. Start both development servers and open the client in two windows.
+2. Enter distinct pilot names, select the same sector, and use the lobby's join button in each window.
+3. Fly and fire in one window; observe that ship from the other.
+4. Press `N` to open Netgraph. Compare JSON and binary encoding, then add latency or jitter and observe snapshot delivery and corrections.
+
+| Control | Action |
+| --- | --- |
+| `W` / Up arrow | Thrust forward |
+| `A` / Left arrow | Turn left |
+| `D` / Right arrow | Turn right |
+| Space / click in the game area | Fire |
+| `Esc` / `L` | Toggle lobby |
+| `N` / `4` | Toggle Netgraph |
+| `K` | Alternate the detached-method `this` bug experiment and its `.bind()` fix |
+| `H` / `P` | Spawn a local asteroid / random pickup for lab experiments |
+| `B` | Run the asset-loading benchmark; inspect the console |
+| `1` / `2` / `3` | Toggle busy-wait / interval scheduling / variable timestep experiments |
+
+The lab experiment keys deliberately change runtime behavior. Reload for a clean comparison. `H` and `P` affect the local simulation; they are not sent as multiplayer commands. Sound starts after a click or keypress because the audio context needs a user gesture.
+
+## Architecture
+
+There are three npm workspace packages. Client and server both import `shared`, but each owns its own `World` instance. Sharing code does not share memory or automatically synchronize state.
+
+```mermaid
+flowchart LR
+  subgraph Browser[Browser — client]
+    UI[Lobby and DOM overlays]
+    Input[Keyboard and mouse]
+    Local[Local World and prediction]
+    Conn[GameConnection]
+    Buffer[Snapshot interpolation]
+    Canvas[Canvas renderer]
+    Input --> Local
+    Local -->|Input commands| Conn
+    Conn -->|Reconciliation| Local
+    Conn -->|Snapshots| Buffer
+    Local --> Canvas
+    Buffer --> Canvas
+  end
+  subgraph Node[Node.js — server]
+    HTTP[HTTP API and static files]
+    WS[WebSocket handler]
+    Rooms[RoomManager and Room]
+    Match[Match and authoritative World]
+    Logs[NDJSON event logs]
+    HTTP --> Rooms
+    WS --> Rooms
+    Rooms --> Match
+    Rooms --> Logs
+  end
+  UI -->|HTTP rooms| HTTP
+  Conn <-->|WebSocket| WS
+  Match -->|Snapshots via room sockets| Conn
+  Shared[shared — simulation, schemas, codecs] -.-> Local
+  Shared -.-> Match
+```
+
+| Location | Responsibility | Entry points |
+| --- | --- | --- |
+| `client/src` | Startup, input, audio, UI, drawing | [main.ts](client/src/main.ts), [loop.ts](client/src/loop.ts) |
+| `client/src/net` | Socket service, prediction, reconciliation, interpolation | [connection.ts](client/src/net/connection.ts), [prediction.ts](client/src/net/prediction.ts), [interpolation.ts](client/src/net/interpolation.ts) |
+| `client/src/lobby` | Room data and DOM presentation | [lobby.ts](client/src/lobby/lobby.ts), [lobbyView.ts](client/src/lobby/lobbyView.ts) |
+| `server/src` | HTTP, sockets, rooms, matches | [index.ts](server/src/index.ts), [ws.ts](server/src/ws.ts), [rooms.ts](server/src/rooms.ts), [match.ts](server/src/match.ts) |
+| `shared/src/sim` | Entity state and game rules, usable in browser and Node | [world.ts](shared/src/sim/world.ts), [ship.ts](shared/src/sim/ship.ts) |
+| `shared/src/protocol` | Runtime schemas, inferred types, parsers | [protocol.ts](shared/src/protocol/protocol.ts) |
+| `shared/src/codec` | JSON and binary wire representations | [spec.ts](shared/src/codec/spec.ts), [binaryCodec.ts](shared/src/codec/binaryCodec.ts) |
+| `server/test` | Simulation, codec, network, migration tests | [lab06.test.js](server/test/lab06.test.js) |
+| `scripts` | Headless multiplayer verification and benchmarks | [verify-dogfight.js](scripts/verify-dogfight.js) |
+
+The server keeps rooms and players in memory. Each `Room` owns a `Match`, its players, and an event log. The match owns the authoritative world, player ships, latest inputs, tick scheduling, and snapshots. Restarting Node recreates the default rooms; live matches have no database persistence.
+
+## Translate React concepts
+
+These are analogies for navigating the existing implementation:
+
+| In a React application | In this repository |
+| --- | --- |
+| App initialization and top-level coordination | `main.ts` constructs and connects runtime objects |
+| UI state, such as selected room or loading status | `Lobby` fields and the `gameState` variable |
+| A component rendering room data | `LobbyView` explicitly updates DOM elements |
+| A service or external store | `GameConnection`, `World`, and the typed event bus |
+| An action | An input command such as `{ thrust, turn, fire, seq }` |
+| An optimistic update followed by a server response | Prediction followed by reconciliation and replay |
+| An effect subscription with cleanup | `bus.on(name, callback)` returns an unsubscribe function |
+| A mutable runtime held in a ref | Long-lived world, ship, loop, and socket objects |
+
+Game entities are mutable class instances. A simulation step updates positions, velocities, health, and timers in place. Canvas reads that state and paints pixels explicitly. Each mutation does not trigger a component render.
+
+The server owns the authoritative multiplayer result. The browser holds predicted local state, buffered remote snapshots, and presentation state. A position on screen can differ briefly from the server position because rendering applies a correction offset or interpolates between snapshots.
+
+If adding React later, start with lobby, chat, settings, and connection indicators. Keep the simulation in a long-lived runtime, expose UI snapshots through an adapter, and let Canvas draw the arena. An effect could start the runtime and clean up listeners, timers, animation frames, and the socket on unmount. Design that lifecycle to tolerate development remounts. A React runtime adapter is a possible extension; it is not implemented here.
+
+## Application lifecycle
+
+Read [main.ts](client/src/main.ts) as the composition root: it wires the modules together.
+
+1. **Create browser services.** Input listeners, Canvas sizing, prediction, interpolation, and Netgraph are initialized. Socket listeners are registered for welcome messages and snapshots.
+2. **Load assets.** `startApplication()` calls `loadAll('/assets/manifest.json', ...)`. Progress paints the loading screen. The loader handles assets and retries; decoded sounds are passed to the audio system.
+3. **Create an initial world.** `setupWorldForRoom()` constructs the local world, ship, asteroids, and pickups, resets prediction/interpolation buffers, subscribes audio/HUD to world events, and opens the room connection. Startup initially uses `room-alpha`, before showing the lobby.
+4. **Show the lobby.** The animation loop starts, `Lobby` and `LobbyView` are constructed, and rooms are polled every four seconds. Fetching validates responses and supports cancellation. A static room-list fallback can display sectors when the backend is unavailable.
+5. **Join a selected room.** The callback unlocks audio, creates the room's local world, reconnects, and switches `gameState` to `playing`. The server welcome message supplies the ship ID and seed used by the client.
+6. **Run continuously.** Simulation consumes input and advances local state. Snapshots feed reconciliation and interpolation. Rendering paints the world and HUD.
+
+`Lobby` owns data and requests; `LobbyView` owns DOM updates and UI listeners. This resembles separating a React data hook from a view component.
+
+## The game loop
+
+A form can wait for the next event. A moving ship needs another position even if a key remains held and no new `keydown` arrives.
+
+[createLoop](client/src/loop.ts) normally schedules frames with `requestAnimationFrame` and advances simulation using a **fixed `1/60` second step**:
+
+```text
+animation frame
+  measure elapsed time
+  add elapsed time to an accumulator
+  while enough time remains for a simulation step:
+    simulate(1 / 60)
+    subtract one step from the accumulator
+  render(accumulator / step, statistics)
+  request the next frame
+```
+
+Simulation and rendering have separate clocks. A slow frame can require several simulation steps; a fast frame can require none. The loop caps a long frame's elapsed time at 0.25 seconds to limit catch-up work. Interval and variable-step modes exist for lab experiments.
+
+`simulate()` reads held keys, predicts input, sends it, updates smoothing, advances the local world, and updates HUD timers. `render()` draws backgrounds, the predicted local ship, remote entities, and UI. The loop provides `alpha`, but the current main renderer uses prediction smoothing and network interpolation for ship display rather than blending the saved local ship states with `alpha`.
+
+The server has a separate **30 Hz** loop in [Match](server/src/match.ts), with a fixed `1/30` second step. It uses `setTimeout` against an advancing target time and records tick duration and scheduling jitter. Browser frame rate and server tick rate need not match.
+
+## A keypress across the network
+
+Suppose you hold `W` to accelerate:
+
+1. **Capture intent.** `input.ts` records held keys in a `Set`. Each simulation step maps them to thrust, turn, and fire.
+2. **Predict immediately.** `PredictionManager.predictStep()` assigns the next sequence number, calls shared ship movement code, and stores the command and timestep in `pendingInputs`.
+3. **Send the command.** `GameConnection.sendInput()` sends binary or JSON over `/ws`. A JSON command looks like this:
+
+   ```json
+   { "type": "input", "seq": 42, "tick": 0, "thrust": 1, "turn": 0, "fire": false }
+   ```
+
+   The client currently sends `tick: 0`; `seq` is used for acknowledgements. It sends control intent, with the server calculating the position.
+
+4. **Validate and retain input.** `ws.ts` checks messages and rate limits, then calls `Match.queueInput()`. The match retains the latest input per player in a map and reuses it until another input replaces it. Every client command does not become a separate server physics step.
+5. **Advance the authoritative world.** At 30 Hz, the match builds a ship-input map and runs `world.step()`. Shared rules apply movement, wrapping, collisions, cleanup, and respawn timers.
+6. **Send a snapshot.** Each player gets entities, server time, tick, and a personalized `ackSeq`. The current sequence tracker updates when input is queued; snapshots are broadcast after the world step. Intermediate inputs can be coalesced into the retained latest control state.
+7. **Reconcile the local ship.** The client drops pending commands with `seq <= ackSeq`, restores position, velocity, angle, health, and shield from the authoritative ship record, then replays remaining inputs with their saved timesteps.
+8. **Smooth the display.** Reconciliation can change position. A visual offset decays toward zero so ordinary corrections appear gradually, while the underlying simulation already uses the corrected position.
+
+For example, with pending inputs 41–44 and an acknowledgement of 42, the client removes 41 and 42, restores the server state, then replays 43 and 44. This resembles optimistic UI reconciling a response, but runs continuously and must account for time.
+
+### Why other players are rendered differently
+
+The client knows its own input immediately. It learns another player's movement from snapshots.
+
+[InterpolationManager](client/src/net/interpolation.ts) buffers snapshots with their local arrival times and renders remote entities about **66 ms behind the current arrival timeline**. It finds two snapshots around that time and blends positions and angles. Wrapping logic chooses the short path across an arena edge. Without a newer snapshot to blend toward, it uses the latest available state.
+
+This adds a small display delay in exchange for smoother motion between 30 Hz updates. Prediction makes your ship responsive; interpolation makes remote movement smooth.
+
+### Current implementation boundaries
+
+This educational implementation combines local simulation and server snapshots. `main.ts` advances the local world in addition to the explicit prediction step. The renderer combines local entities with remote snapshots, skipping remote asteroids and pickups when a matching local ID exists. Snapshots reconcile selected ship fields rather than replacing the entire client world.
+
+Shared rules and seeded randomness therefore do not guarantee identical live worlds. Different timesteps, input coalescing, local experiment actions, and independently created entities can produce differences. Determinism tests verify equal simulations under equal conditions; they do not establish complete live multiplayer synchronization. Keep this distinction in mind when investigating corrections or adding gameplay.
+
+## Shared simulation and contracts
+
+[World](shared/src/sim/world.ts) stores entities in a `Map` keyed by `EntityId`. It allocates IDs, spawns/despawns entities, advances rules, emits events, and serializes snapshots. Its entity union includes ships, bullets, asteroids, and pickups.
+
+A world step:
+
+1. Applies ship input and updates other live entities.
+2. Wraps entities across arena boundaries.
+3. Resolves collisions and emits events.
+4. Removes dead non-ship entities and advances ship respawn timers.
+5. Replenishes asteroids when needed.
+
+The simulation has no DOM, Canvas, or browser audio dependency. Both Node and browser import it through `shared`. A seeded `PRNG` makes random choices repeatable with equal seeds, starting state, input, and timesteps.
+
+The typed [event bus](shared/src/events.ts) lets rules emit `fired`, `hit`, `pickup`, or `respawn` events. Audio and HUD subscribe on the client, keeping presentation out of collision rules. TypeScript checks event payloads; subscribing returns a cleanup function.
+
+### Types at development time, schemas at runtime
+
+TypeScript helps while writing code, but received JSON is runtime data. [protocol.ts](shared/src/protocol/protocol.ts) defines Zod schemas, infers types from them, and exposes parsers returning success or failure.
+
+Messages use a discriminated `type` field. After parsing, switching on `type` narrows the payload; `assertNever()` helps catch unhandled variants. Branded numbers such as `EntityId`, `Tick`, and `Seq` distinguish concepts otherwise represented as `number`; constructors validate ranges. Readonly snapshot types constrain accidental mutation by consumers.
+
+All packages inherit strict settings from [tsconfig.base.json](tsconfig.base.json), including `noUncheckedIndexedAccess`. Vite builds browser code; `tsx` executes server TypeScript. Run typechecking separately because a Vite build does not replace it.
+
+### Two wire formats, one model
+
+JSON is convenient for inspecting messages. Binary uses a little-endian `DataView` layout: a 16-byte snapshot header plus 24 bytes per entity, and 14 bytes per input frame. Angles are quantized with a factor of 1000. Codecs validate layout/version/ranges and convert messages into the shared model. See [spec.ts](shared/src/codec/spec.ts) for exact sizes.
+
+Join, chat, and other control messages also use JSON; choosing binary does not turn every message into binary.
+
+## API and configuration
+
+HTTP handles discrete requests; WebSockets carry ongoing match traffic.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Process health, uptime, room count, memory |
+| `GET /api/rooms` | Room list for polling |
+| `POST /api/rooms` | Create a room from a validated JSON body |
+| `GET /api/stats` | Per-room tick, entity, codec, latency metrics |
+| `GET /api/replays/:filename` | Stream a recorded NDJSON event log |
+| `GET /api/slow?ms=300` | Demonstrate blocking the Node event loop |
+| `/ws` | WebSocket: join/leave, roster, chat, input, snapshots, ping/pong, configuration |
+
+Open `/health` on port 3000 during development: Vite proxies `/api` and `/ws`. The slow endpoint blocks the shared Node thread, pausing other requests and match ticks during the experiment.
+
+Room events are streamed to `logs/*.ndjson` through a transform and file pipeline. The replay endpoint streams records back; it does not reconstruct a playable match from complete recorded inputs. Graceful shutdown closes rooms, sockets, and logs.
+
+The server validates `process.env` on startup. **`.env` files are not loaded automatically.** Defaults are defined in `ServerConfigSchema`:
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PORT` / `HOST` | `3000` / `0.0.0.0` | Listen address |
+| `NODE_ENV` | `development` | Validated environment name |
+| `LOG_DIR` | `logs` | Log directory resolved from repository root |
+| `MAX_PAYLOAD_BYTES` | `32768` | Maximum socket payload |
+| `RATE_LIMIT_PER_SEC` | `15` | Control-message rate limit |
+| `INPUT_RATE_LIMIT_PER_SEC` | `120` | Input limit; minimum configuration is 60 |
+| `HEARTBEAT_INTERVAL_MS` | `15000` | Socket liveness interval |
+| `JOIN_TIMEOUT_MS` | `5000` | Initial join deadline |
+| `BUFFERED_AMOUNT_THRESHOLD` | `65536` | Buffered socket-byte threshold checked by the handler |
+
+For example, in PowerShell:
+
+```powershell
+$env:PORT = '3001'
+npm run dev:server
+```
+
+If changing the backend development port, update both proxy targets in `client/vite.config.js`. For a built app served directly by Node, open the new backend port instead.
+
+Netgraph's codec and artificial latency/jitter/drop settings modify the room's `Match`, affecting other players there too. Artificial drop skips application snapshot delivery; WebSocket transport remains reliable and ordered. Prediction/interpolation toggles are local settings.
+
+## Making changes
+
+| Goal | Start here | Keep consistent |
+| --- | --- | --- |
+| Change thrust, rotation, firing | `shared/src/sim/ship.ts` | Rules used by server and prediction |
+| Change damage or collision rules | `shared/src/sim/collision.ts` | Server results, local feedback, emitted events |
+| Add a pickup | `shared/src/sim/components.ts`, `pickup.ts`, collision rules | Effects, serialization, drawing |
+| Add a socket message | Shared schemas, `server/src/ws.ts`, `client/src/net/connection.ts` | Validation, dispatch, typed bus events, rate handling |
+| Add an entity/snapshot field | Serialization, schemas, codecs, renderer | JSON/binary round trips and wire layout |
+| Change lobby or chat UI | `client/src/lobby/lobbyView.ts`, `style.css` | Model subscriptions and UI lifecycle |
+| Investigate corrections | `prediction.ts`, `match.ts`, `main.ts` | Sequence handling, timesteps, replay, local stepping |
+
+For a first exercise, change a movement constant in `ship.ts`, run checks, and compare flight in two windows. For a visual change, start with `render/draw.ts`. Keep browser APIs in `client` so shared rules stay runnable in Node tests.
+
+Suggested reading order: `main.ts` → `loop.ts` → `world.ts` and `ship.ts` → `connection.ts` → `ws.ts` and `match.ts` → `prediction.ts` and `interpolation.ts` → protocol and codecs.
+
+## Checks and troubleshooting
+
+Run the primary checks used by [CI](.github/workflows/ci.yml):
+
+```bash
 npm run typecheck
 npm run lint
 npm test
 npm run build
-
-# Два окремі термінали:
-npm run dev:server
-npm run dev:client
 ```
 
-Відкрийте адресу Vite у двох вкладках, приєднайтеся до однієї кімнати та
-перевірте рух і постріли. У Netgraph (`N`) можна перемикати JSON/Binary і
-додавати затримку. Для автоматичної перевірки двох клієнтів:
+Tests use Node's test runner with `tsx`. They cover determinism, codecs, matches, server behavior, connection handling, and migration regressions. The migration test reads simulation files from `lab-05` to compare behavior after 1000 steps. If your clone has no tags, run `git fetch --tags origin` first.
+
+Additional checks and experiments:
 
 ```bash
+node --import tsx scripts/test-lab03.js
 node --import tsx scripts/verify-dogfight.js
 node --import tsx scripts/benchmark-codecs.js
 ```
 
-GitHub Actions виконує ті самі основні перевірки після `npm ci`.
-Локально перевірено: typecheck, lint, production build, усі 55 тестів,
-Lab 03 regression script і headless-бій двох клієнтів зі штучною затримкою.
-`server/test/migration.test.js` порівнює точний знімок після 1000 кроків із
-реалізацією за тегом `lab-05`; окремо перевіряється детермінізм двох світів.
-У сценарії використовуються ID від алокатора: старий hard-coded `100`
-міг збігтися з ID наступної сутності та приховував перезапис корабля.
-Захист від таких колізій тепер перевіряється окремим тестом.
-`client/src/type-contracts.ts` перевіряє відхилення неправильних payload,
-змішаних брендів і мутацій readonly-даних через `@ts-expect-error`.
+The headless multiplayer check starts its own server on an available local port and connects two simulated players. Benchmark timings depend on the machine running them.
 
-### What TypeScript found
+| Symptom | What to check |
+| --- | --- |
+| Lobby appears but multiplayer fails | Start `npm run dev:server`; the static room fallback can show a lobby without a working socket server. |
+| API returns 503 or socket cannot connect | Check backend output and that both Vite targets match its port. |
+| Other player is missing | Join the same sector in both windows; inspect roster and socket messages. |
+| No sound | Click or press a key to unlock audio. |
+| Slow game or unexpected movement | Reload to reset loop experiments; reset Netgraph latency/drop/drift settings. |
+| Production URL returns 404 | Build before starting Node; check that `client/dist` exists. |
+| Migration test cannot read `lab-05` | Fetch repository tags. |
 
-- `Canvas.getContext('2d')` може повернути `null`: ініціалізація тепер перевіряє контекст перед рендерингом (`client/src/render/canvas.ts`).
-- `Event.target` може бути `null` або не бути HTML-елементом: обробники звужують його через `instanceof`, перш ніж читати DOM-властивості (`client/src/ui/netgraph.ts`).
-- `Map.get()` і індексація масивів можуть повернути `undefined`: пошук власника кулі та обробка черги повідомлень перевіряють результат перед використанням (`shared/src/sim/collision.ts`, `client/src/net/connection.ts`).
-- Рендер-функції з параметрами, виведеними лише з `null`, не приймали завантажені зображення: явні типи ресурсів описують як зображення, так і fallback (`client/src/render/draw.ts`).
-- Приведення результату `JSON.parse` до типу не перевіряє мережеві дані: тепер вхід має тип `unknown` і проходить Zod перед dispatch. Це виправлення межі runtime, яке сам компілятор зробити не може.
+In DevTools, inspect Network → WS for input and snapshots. Switch to JSON for readable payloads. Compare Netgraph's corrections with `/api/stats` to distinguish prediction behavior from slow server ticks.
 
-### Три найцікавіші типи
+## Lab versions and reports
 
-1. **`ClientMessage = z.infer<typeof ClientMessageSchema>`.** Схема одночасно
-   перевіряє JSON під час виконання і створює TS-тип. Поле `type` відрізняє
-   `join`, `input`, `chat` та інші варіанти; після перевірки цього поля
-   компілятор знає доступні властивості. `assertNever` виявляє пропущений
-   варіант у диспетчері.
-2. **`EntityId`, `Tick`, `Seq`.** У JavaScript це числа; у TypeScript вони мають
-   різні бренди. `world.get(asTick(1))` не компілюється, хоча `1` є числом.
-   Конструктори `asEntityId`/`asTick`/`asSeq` перевіряють діапазони через Zod,
-   а не приховують помилки небезпечним приведенням типу.
-3. **`Bus<E>` та `GameEvents`.** Mapped type перетворює union повідомлень на
-   таблицю «назва → payload». Параметр `K extends keyof E` зв'язує назву події
-   з `E[K]`: `emit('status', {status: 'connected'})` дозволений, а `'flying'`
-   замість стану з'єднання — помилка компіляції. Той самий Bus обслуговує
-   типізовані події симуляції.
-
-### Рішення щодо UI-фреймворку
-
-Лобі та HUD залишені на vanilla DOM із типізованим Bus. Для двох невеликих
-панелей поточний поділ моделі й відображення достатній; додавання React,
-Vue або Svelte збільшило б залежності та складність збірки без потрібної
-для цієї роботи функціональності. Canvas, фізика та ігровий цикл залишаються
-незалежними від UI. Перевага фреймворку при подальшому розширенні —
-декларативні компоненти й автоматичне оновлення складного інтерфейсу.
-
-### Завершення та регресії
-
-Регресійні тести охоплюють повторне використання ID після 65 535 створень,
-збереження зайнятих ID, відхилення некоректних бінарних кутів, коректний
-код закриття браузерного WebSocket і rate limiting обох форматів.
-Керувальні повідомлення мають окремий ліміт `RATE_LIMIT_PER_SEC` (15/с),
-ввід — `INPUT_RATE_LIMIT_PER_SEC` (120/с, мінімум 60/с), щоб підтримувати
-звичайний ігровий цикл. Конфігурація читається з оточення процесу;
-`.env` автоматично не завантажується.
-
-У TS-коді немає типу `any` або небезпечних приведень `as SomeType`.
-Залишено чотири `as const` для таблиць літералів і бінарної специфікації;
-кожне має коментар із поясненням. Це const assertions, які зберігають
-точні значення, а не підмінюють перевірку вхідних даних.
-
-- [x] M1: strict toolchain і спільна типізована симуляція.
-- [x] M2: єдині схеми/типи протоколу та перевірки обох кодеків.
-- [x] M3: клієнт і сервер під strict; типізовані події; CI.
-- [x] M4: рішення щодо фреймворку, знайдені проблеми, три типи.
-- [x] Регресії та порівняння детермінованої симуляції з Lab 5.
-- [x] Локальний тег здачі: `lab-06`.
-
-Нижче збережено звіт Lab 5 як опис мережевої архітектури та попередніх
-експериментів; наведені там виміри стосуються попереднього інкременту.
-
----
-
-## Демонстрація: Мультиплеєрний догфайт двох гравців пліч-о-пліч (100 мс затримки, 30 Hz)
-
-![Два вікна браузера пліч-о-пліч у реальному часі: Viper та Iceman ведуть бій крізь 100 мс штучної затримки з активним Netgraph](docs/dogfight-two-players.gif)
-
-> *"The client is in the hands of the enemy."*  
-> — кожен розробник мультиплеєрних ігор рано чи пізно стикається з цією аксіомою.
-
----
-
-## 1. Про проєкт та інкремент Lab 05
-
-У п'ятій лабораторній роботі гра **dogfight** здійснила фундаментальний стрибок від локального клієнта та базового лобі (Lab 01–04) до **повноцінної мультиплеєрної мережевої гри в реальному часі** з авторитетним сервером.
-
-Головний виклик комп'ютерних мереж у динамічних іграх — це подолання фізичного піка затримки (RTT 60–120 мс). Якщо керувати кораблем безпосередньо через серверні команди без передбачення, корабель реагує із запізненням на весь RTT, роблячи гру абсолютно некерованою («гумове керування»). Якщо ж дозволити клієнту транслювати власні координати, виникає розходження симуляцій через похибки чисел із плаваючою комою, а будь-який користувач може відкрити DevTools і миттєво телепортуватися.
-
-Розв'язанням цієї дилеми є класична індустріальна архітектура (Gabriel Gambetta / Valve Source Engine / Overwatch GDC): **авторитетний сервер**, **клієнтське передбачення (Client-Side Prediction)**, **звірка серверного стану (Server Reconciliation)** із повторним застосуванням вхідних команд (Input Replay), **експоненційне згладжування виправлень (Smoothing)**, **інтерполяція віддалених сутностей у минулому (Entity Interpolation)** та **високоефективний бінарний протокол на `DataView` / `ArrayBuffer`**.
-
-Інкремент виконано у межах чотирьох етапів (**Milestones M1–M4**):
-
-- **M1 — Спільна симуляція (`shared/`), серверний такт 30 Hz, Latency Injector та Netgraph**:
-  - Створено третій пакет воркспейсу **`shared/`**, у який винесено чисту симуляцію (`World`, `Ship`, `Asteroid`, `Bullet`, `Pickup`, `Collision`, `Vector2`), детермінований генератор `PRNG` (алгоритм Mulberry32), типізовані контракти та кодеки. Симуляція повністю ізольована від DOM, Canvas, `window` та Node-специфічних модулів.
-  - Клас `Match` у серверному секторі: виконує авторитетний крок симуляції на фіксованій частоті **30 Hz** ($dt = 1/30 \approx 33.33$ мс).
-  - **Прецизійний таймер**: планування кожного кроку через `setTimeout` проти абсолютної цільової часової мітки (`nextTickTime += interval; delay = nextTickTime - performance.now()`), що гарантує відсутність нагромадження затримок та дрейфу, властивих простому `setInterval`.
-  - Моніторинг тіків та джиттеру: діагностичний ендпоінт `GET /api/stats` транслює реальний час кроку, jitter та кількість перевантажень (overruns).
-  - **Latency Injector (`server/src/latency.ts`)**: симуляція реальних умов інтернету зі штучною базовою затримкою (0–300 мс), джиттером (0–50 мс) та відсотком втрати пакетів (Packet Drop 0–15%).
-  - **Клієнтський Netgraph Overlay (`client/src/ui/netgraph.ts`)**: екранний інструмент телеметрії, що в реальному часі візуалізує RTT (Ping), частоту снапшотів, вхідний/вихідний трафік (KB/s In/Out), розмір останнього пакету, чергу непідтверджених команд та магнітуду корекції.
-- **M2 — Клієнтське передбачення, серверна звірка та згладжування**:
-  - `PredictionManager (`client/src/net/prediction.ts`)`: локальний гравець негайно застосовує натискання клавіш до свого корабля через ту саму функцію `stepInput`, отримуючи 0 мс відчутної затримки відгуку.
-  - Кожна відправлена команда маркується зростаючим номером послідовності `seq`. Непідтверджені команди буферизуються в черзі `pendingInputs`.
-  - На кожен отриманий знімок із позначкою `ackSeq` клієнт скидає старі команди ($seq \le ackSeq$), встановлює корабель в авторитетні координати сервера та **повторно симулює всі збережені команди поспіль**.
-  - **Error Smoothing**: якщо похибка передбачення перевищує 0.5 px (наприклад, через непередбачене зіткнення), накопичений вектор похибки додається до візуального зміщення `visualOffset`, яке експоненційно згасає за ~100 мс без різких стрибків (anti-rubber-banding).
-  - Експеримент із детермінізмом: штучне внесення розсинхрону фіксується сплеском похибки на графіку Netgraph і миттєво стабілізується звіркою.
-- **M3 — Інтерполяція віддалених сутностей та спільний повітряний бій**:
-  - `InterpolationManager (`client/src/net/interpolation.ts`)`: віддалені пілоти та астероїди рендеряться «у минулому» з часовим зміщенням $\tau = 66$ мс (2 інтервали снапшотів).
-  - Між двома граничними знімками виконується плавний `lerp` координат із коректним урахуванням тороїдального перетину меж арени (`wrap`) та сферична інтерполяція кута за найкоротшою дугою (`lerpAngle`).
-  - Локальне передбачення куль: постріл гравця з'являється на екрані негайно з локальним ID, а при надходженні авторитетного снапшота безшовно підміняється серверною сутністю.
-  - Автоматизований headless-тест `scripts/verify-dogfight.js`: піднімає двох автономних клієнтів (Viper та Iceman), які маневрують та ведуть вогонь крізь 100 мс затримки, підтверджуючи похибку звірки < 1.5 px.
-- **M4 — Високоефективний бінарний протокол на `DataView`**:
-  - Розроблено формальну специфікацію бінарного кадру: фіксований **Little-Endian** порядок байтів, типізація полів, квантування кута обертання в `Int16` (точність 0.001 рад / 0.057°).
-  - Повна реалізація енкодерів/декодерів на базі `ArrayBuffer` та `DataView` для всіх типів повідомлень: `Input`, `Snapshot`, `Ping`, `Pong`, `Config`.
-  - Підтримка нативних бінарних фреймів у WebSockets: `socket.binaryType = "arraybuffer"` на клієнті та обробка `Buffer` як `Uint8Array` на сервері.
-  - Повний набір кругових тестів (Round-Trip Tests): гарантія збереження числових значень у межах допуску квантування.
-  - Порівняльний бенчмарк `scripts/benchmark-codecs.js`: бінарний знімок займає **304 байти проти 1496 байтів у JSON (стиснення в 4.92 рази)**, а швидкість кодування/декодування зростає в **11.94 рази**.
-
----
-
-## 2. Швидкий старт
-
-Проєкт організовано як **npm workspaces** із трьома взаємопов'язаними пакетами: `client`, `server`, `shared`:
+Each tag points to that lab's submitted code. To inspect an earlier README without switching your working tree:
 
 ```bash
-# 1. Встановлення залежностей у всіх воркспейсах
-npm install
-
-# 2. Запуск повного інтеграційного тестового набору (node:test, 28 тестів)
-npm test
-
-# 3. Запуск порівняльного бенчмарку бінарного DataView кодека проти JSON
-node --import tsx scripts/benchmark-codecs.js
-
-# 4. Запуск автоматизованого тесту двох headless-гравців (догфайт на 100 мс затримки)
-node --import tsx scripts/verify-dogfight.js
-
-# 5. Перевірка якості коду лінтером ESLint (0 помилок, 0 попереджень)
-npm run lint
-
-# 6. Автоматичне форматування коду Prettier
-npm run format
-
-# 7. Збірка клієнта для продакшну
-npm run build
-
-# 8. Запуск сервера гри (роздає клієнт та підтримує WebSocket 30 Hz)
-npm start
+git fetch --tags origin
+git tag --list
+git show lab-03:README.md
 ```
 
-Після запуску відкрийте браузер за адресою **`http://localhost:3000`** (або відкрийте два вікна поруч для перевірки мультиплеєра).
+| Tag | Main addition |
+| --- | --- |
+| [lab-01](https://github.com/telare/dogfight-uni/tree/lab-01) | Event loop, animation loop, timestep experiments |
+| [lab-02](https://github.com/telare/dogfight-uni/tree/lab-02) | Entity model, world, collisions, composition, `this` |
+| [lab-03](https://github.com/telare/dogfight-uni/tree/lab-03) | Async assets, audio, events, HTTP lobby |
+| [lab-04](https://github.com/telare/dogfight-uni/tree/lab-04) | Node server, rooms, WebSockets, streams |
+| [lab-05](https://github.com/telare/dogfight-uni/tree/lab-05) | Authoritative match, prediction, reconciliation, interpolation, binary protocol |
+| [lab-06](https://github.com/telare/dogfight-uni/tree/lab-06) | Strict TypeScript, shared contracts, runtime validation |
 
----
-
-## 3. Заміри та порівняння протоколів: JSON vs Binary (`DataView`)
-
-За результатами бенчмарку `scripts/benchmark-codecs.js` при частоті сервера **30 Hz** для сцени з **4 кораблями гравців, 4 астероїдами та 4 кулями (12 динамічних сутностей)** отримано такі точні показники:
-
-| Метрика протоколу | Текстовий JSON | Бінарний (`DataView` LE) | Ефект оптимізації |
-|---|---|---|---|
-| **Розмір снапшота (Bytes/snapshot)** | **1496 B** | **304 B** | **Зменшення у 4.92× рази (−79.7%)** |
-| **Вхідний трафік клієнта (KB/s down @ 30 Hz)** | **43.83 KB/s** | **8.91 KB/s** | **Економія ~35 KB/s на кожного гравця** |
-| **Розмір кадру вводу (Bytes/input)** | **73 B** | **14 B** | **Зменшення у 5.21× рази (−80.8%)** |
-| **Вихідний трафік клієнта (KB/s up @ 30 Hz)** | **2.14 KB/s** | **0.41 KB/s** | **Зменшення трафіку до 0.41 KB/s** |
-| **Час обробки (Encode + Decode µs)** | **21.37 µs** | **1.79 µs** | **Прискорення процесора в 11.94× разів** |
-
-### Чому бінарний формат перемагає:
-1. **Відсутність накладних витрат назв полів**: у JSON ключі `"id"`, `"kind"`, `"x"`, `"y"`, `"angle"` дублюються для кожного об'єкта в кожному кадрі. У бінарному кадрі структура визначається фіксованим зміщенням байтів (Offset).
-2. **Нульова конвертація чисел у текст**: рушію V8 більше не потрібно викликати перетворення `DoubleToString` та синтаксичний аналізатор `JSON.parse()`.
-3. **Квантування кута (Angle Quantization)**: збереження кута як 32-бітного дробу (`Float32`, 4 байти) є надлишковим. Нормалізація кута в діапазон $[-\pi, \pi]$ та масштабування у 16-бітне знакове ціле (`Int16`, 2 байти) дає дискретність $2\pi / 65535 \approx 0.000096$ радіан (менше 0.006°), що візуально не відрізняється від математичного ідеалу, але заощаджує 50% байтів кута.
-
----
-
-## 4. Специфікація бінарного протоколу (Binary Specification v1.0)
-
-Всі багатобайтові числа передаються виключно в порядку **Little-Endian** (`true` у методах `DataView`).
-
-### 4.1. Кадр введення клієнта (`ClientInputMessage`, Type = 1, розмір: 14 байтів)
-
-```
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|  Type = 0x01  | Version = 0x01|        Sequence (Uint32)      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|       Sequence (cont.)        |          Tick (Uint32)        |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|          Tick (cont.)         |  Turn (Int16, scaled x1000)   |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Thrust (Uint8)| Flags (Uint8) |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-- `Offset 0` (Uint8): Тип повідомлення (`0x01 = INPUT`).
-- `Offset 1` (Uint8): Версія протоколу (`0x01`).
-- `Offset 2..5` (Uint32, LE): Номер послідовності команди `seq`.
-- `Offset 6..9` (Uint32, LE): Останній відомий клієнту тік сервера `tick`.
-- `Offset 10..11` (Int16, LE): Кутове керування `turn` $\times 1000$ (діапазон від −1000 до 1000).
-- `Offset 12` (Uint8): Імпульс двигуна `thrust` (0 або 1).
-- `Offset 13` (Uint8): Бітові прапорці: Bit 0 — `fire` (стрільба).
-
-### 4.2. Авторитетний знімок сервера (`ServerSnapshotMessage`, Type = 2)
-
-**Заголовок кадру (Header — 16 байтів):**
-- `Offset 0` (Uint8): Тип повідомлення (`0x02 = SNAPSHOT`).
-- `Offset 1` (Uint8): Версія протоколу (`0x01`).
-- `Offset 2..5` (Uint32, LE): Номер авторитетного тіку `tick`.
-- `Offset 6..9` (Uint32, LE): Серверний час у мілісекундах `serverTime`.
-- `Offset 10..13` (Uint32, LE): Підтверджений номер вводу для адресата `ackSeq`.
-- `Offset 14..15` (Uint16, LE): Кількість сутностей у знімку `entityCount`.
-
-**Тіло сутності (Entity Block — 24 байти на сутність):**
-- `Offset +0..1` (Uint16, LE): Унікальний ідентифікатор `id`.
-- `Offset +2` (Uint8): Тип сутності `kind` (`1: ship`, `2: asteroid`, `3: bullet`, `4: pickup`).
-- `Offset +3` (Uint8): Специфічний прапорець (для корабля: `thrust`, для кулі: `isHoming`, для астероїда: `tier`).
-- `Offset +4..7` (Float32, LE): Координата $X$ на арені.
-- `Offset +8..11` (Float32, LE): Координата $Y$ на арені.
-- `Offset +12..15` (Float32, LE): Лінійна швидкість $V_x$.
-- `Offset +16..19` (Float32, LE): Лінійна швидкість $V_y$.
-- `Offset +20..21` (Int16, LE): Квантований кут $\theta \times 1000$ (радіани).
-- `Offset +22` (Uint8): Рівень здоров'я `hp` (0–100).
-- `Offset +23` (Uint8): Рівень енергетичного щита `shield` (0–100).
-
----
-
-## 5. Односторінковий технічний звіт: Архітектура Netcode (Netcode Write-Up)
-
-### 5.1. Три фундаментальні проблеми мережевих ігор
-
-1. **Затримка сигналу (Latency / RTT)**: фізична швидкість світла в оптоволокні та буферизація маршрутизаторів дають від 40 до 150 мс затримки. Якщо чекати відповіді сервера на кожен поворот або тягу, гравець відчуває важкий дискомфорт.
-   - *Рішення*: **Client-Side Prediction**. Клієнт негайно застосовує власні команди локально, моделюючи корабель у майбутньому відносно сервера.
-2. **Узгодженість симуляції (Consistency)**: якщо клієнти самостійно моделюють наслідки взаємодій, через похибки обчислень `float` чи затримку пакетів виникає десинхронізація (Desync).
-   - *Рішення*: **Authoritative Server & Reconciliation**. Сервер є єдиним джерелом правди. Він щокроку транслює снапшоти з `ackSeq`. Клієнт скидає стан свого судна до серверного і наново «прокручує» всі команди, надіслані після цього снапшота.
-3. **Захист від читерства (Anti-Cheat / Trust Boundary)**: користувач контролює клієнтське середовище і може модифікувати будь-які змінні.
-   - *Рішення*: **Клієнт відправляє виключно наміри (Input), ніколи — координати**. Сервер перевіряє валідацію вхідних даних (кут не перевищує ліміт, швидкість не модифікована) та застосовує фізику самостійно.
-
-### 5.2. Порівняння поведінки гри за даними Netgraph (до і після Prediction)
-
-- **Без Prediction («Дурний клієнт»)**:
-  - При штучній затримці 100 мс (RTT 200 мс) реакція на натискання `[W]` або стрілок з'являється лише через 200 мс. Прицілювання стає неможливим, керування корабля здається «плаваючим у киселі».
-- **З Prediction та Reconciliation**:
-  - Відгук на поворот та прискорення складає **0 мс**.
-  - На вільному просторі похибка передбачення `Reconciliation Error` становить **0.00–0.25 px**, що підтверджує абсолютний математичний детермінізм симуляції.
-  - При зіткненні з непередбаченим астероїдом виникає миттєвий сплеск похибки (10–30 px). Завдяки системі **Smoothing** візуальна модель плавно повертається до авторитетної траєкторії за експоненційним законом без неприємного для очей стрибка.
-
-### 5.3. Зіткнення з порушенням детермінізму під час розробки
-
-Під час інтеграції спільної симуляції було зафіксовано постійне накопичення похибки передбачення (дрейф понад 15 px щосекунди навіть при прямолінійному польоті).
-- **Причина**: генерація розльоту осколків та випадкових кутів спавну бонусів через глобальний `Math.random()`. Оскільки у браузері та на сервері виклики `Math.random()` відбувалися несинхронно, псевдовипадкові послідовності миттєво розходилися.
-- **Виправлення**: повний перехід на детермінований генератор **Mulberry32 PRNG** з передачею серверного `seed` у вітальному пакеті `welcome`. Усі випадкові фізичні події тепер обчислюються суворо синхронно.
-
-### 5.4. Компроміс інтерполяційної затримки (Interpolation Delay Trade-Off)
-
-Для віддалених гравців обрано затримку буферизації $\tau = 66$ мс (рівно 2 інтервали між снапшотами при 30 Hz):
-- **Якщо $\tau < 33$ мс**: затримка недостатня. Будь-який мережевий джиттер вичерпує буфер знімків (Buffer Starvation), змушуючи екстраполювати або зупиняти чужий корабель, що призводить до видимого сіпання.
-- **Якщо $\tau > 150$ мс**: рух чужих суден стає надзвичайно плавним, але вони відображаються занадто далеко в минулому. Прицілювання стає несправедливим, вимагаючи введення компенсації затримки (Lag Compensation).
-- **Значення 66 мс**: ідеальний баланс між абсолютною плавністю рендерингу (60–144 FPS) та мінімальним відставанням від реального стану супротивника.
-
----
-
-## 6. Захист на дошці: Відповіді на теоретичні питання (Whiteboard Reflection)
-
-### 1. Чому сервер обов'язково має бути авторитетним?
-Клієнтський комп'ютер знаходиться під повним контролем користувача («в руках ворога»). Якщо клієнт транслює свої координати:
-1. **Читерство**: гравець може модифікувати код через DevTools і миттєво телепортувати корабель за спину ворога або збільшити швидкість до $10^6$.
-2. **Розходження симуляцій (Divergence)**: через мікроскопічні відмінності у заокругленні `Float` та втрату пакетів клієнти бачитимуть різні версії подій, роблячи гру нескоординованою.
-
-### 2. Як працює Client-Side Prediction та як виявити порушення детермінізму?
-Клієнт застосовує власні команди негайно до локальної моделі судна, не чекаючи відповіді сервера. Це спирається на **детермінізм симуляції**: однакові вхідні дані за однаковий проміжок часу $dt$ дають абсолютно однаковий стан.
-Порушення детермінізму виявляється шляхом моніторингу `Reconciliation Correction Magnitude` у прямолінійному польоті: якщо похибка стабільно перевищує 0 px без зовнішніх зіткнень, у симуляції є недетермінований виклик (`Math.random()`, `Date.now()`, обхід `Set`/`Map` у різному порядку).
-
-### 3. Покроковий розбір Server Reconciliation
-*Сценарій*: клієнт на тіку 104; приходить снапшот за тік 100 із `ackSeq = 57`; буфер клієнта містить команди `seq 55..61`.
-1. Клієнт відкидає команди з номерами `seq 55..57`, оскільки вони вже враховані сервером у цьому снапшоті.
-2. Локальний корабель переміщується в координати, прислані сервером за тік 100.
-3. Клієнт послідовно бере збережені команди `seq 58, 59, 60, 61` та повторно виконує функцію `stepInput` для кожної з них.
-4. Позиція корабля знову відповідає тіку 104, але тепер вона повністю скоригована з урахуванням авторитетного минулого.
-
-### 4. Навіщо інтерполювати чужі сутності у минулому?
-Сервер надсилає знімки 30 разів на секунду, а монітор гравця оновлюється на 60–144 Hz. Якщо малювати останній отриманий знімок, гравець бачитиме 30-герцове дискретне смикання. Рендеринг у минулому на величину затримки інтерполяції (66 мс) гарантує, що у клієнта завжди є два реальні знімки (минулий і наступний), між якими можна провести плавний `lerp`.
-
-### 5. Що таке компенсація затримки (Lag Compensation)?
-Оскільки гравець бачить супротивника в минулому (через інтерполяцію та пінг), постріл спрямовується туди, де супротивник був 100 мс тому. На сервері в цей момент ворожий корабель уже змістився вперед. **Lag Compensation** — це механізм, за якого сервер у момент пострілу «відмотує» час світу назад до моменту, який бачив стрілець, перевіряє влучання кулі, а потім повертає світ у теперішній час.
-
-### 6. `DataView` проти типізованого масиву (`Float32Array`): коли що обирати?
-- `Float32Array`: підходить для масивів **однорідних даних** (наприклад, вершини полігонів у WebGL). Використовує апаратний порядок байтів CPU (Native Endianness).
-- `DataView`: незамінний для бінарних мережевих протоколів зі **змішаними типами даних** (байт типу, 32-бітний тік, 16-бітний кут), оскільки дозволяє читати будь-який тип за довільним зміщенням і суворо фіксує Little-Endian порядок байтів незалежно від архітектури процесора клієнта.
-
-### 7. Квантування кута в `Int16`: яка точність і чи її достатньо?
-Кут нормалізується у значення $\theta \in [-\pi, \pi]$ і зберігається як $\text{round}(\theta \times 1000)$ у 2-байтовому `Int16`. Крок дискретизації складає 0.001 радіана ($0.057^\circ$). Для екрана 1200×800 на дистанції 500 пікселів відхилення становить лише $500 \times \sin(0.001) \approx 0.5$ пікселя, що є непомітним для людського ока, але заощаджує 2 байти на кожну сутність у кожному кадрі.
-
-### 8. Чому не варто використовувати `setInterval` для серверного такту?
-`setInterval` дрейфує, якщо виконання колбеку затримується подіями I/O або навантаженням Event Loop. Інтервали починають «злипатися» і плавати (30 мс, 45 мс, 20 мс). Схема з абсолютною цільовою міткою `nextTickTime += 33.33` та плануванням через `setTimeout(tick, nextTickTime - performance.now())` автоматично коригує випадковий джиттер, підтримуючи точну довгострокову частоту 30.000 Hz. При перевантаженні (Overrun) черга фіксує пропуск і запобігає «спіралі смерті».
-
-### 9. Що зламається, якщо симуляція викличе `Math.random()`, обійде `Set` або викличе `Date.now()`?
-- `Math.random()` порушить детермінізм: сервер і клієнт згенерують різні числа, і передбачений корабель постійно відскакуватиме при звірці.
-- Обхід `Set`/`Map`: порядок ітерації залежить від черговості додавання елементів. Якщо клієнт підключився пізніше і сутності додавалися в іншій послідовності, зіткнення розв'яжуться по-різному.
-- `Date.now()`: системний годинник змінюється операційною системою (NTP синхронізація) та повертає недетермінований $dt$, ламаючи повторне виконання кроків у Reconciliation.
-
----
-
-## 7. Чеклист виконання вимог (Deliverable Checklist)
-
-- [x] **Пакет `shared/` у воркспейсі**: чиста, детермінована, seeded симуляція, протокол та кодеки; чистий імпорт у Node.js без наявності DOM/Canvas.
-- [x] **Авторитетний сервер `Match` на 30 Hz**: прецизійний таймер на базі цільового часу; збір тривалості тіків та джиттеру у `/api/stats`; валідація вводу та захист від переповнення.
-- [x] **Протокол синхронізації**: кадри вводу несуть `seq`; знімки несуть авторитетний `tick` та `lastProcessedSeq` (`ackSeq`).
-- [x] **Client-Side Prediction та Server Reconciliation**: локальний відгук 0 мс; повторне виконання непідтверджених команд; експоненційне згладжування виправлень (Smoothing).
-- [x] **Інтерполяція віддалених сутностей**: буфер знімків із затримкою 66 мс; обробка тороїдального перетину меж арени (`wrap`); сферична інтерполяція кута; локальне передбачення куль.
-- [x] **Latency/Jitter/Drop Injector та Netgraph Overlay**: керування штучною затримкою у реальному часі зі слайдерами та графіком пінгу, частоти знімків і похибок.
-- [x] **Бінарний протокол на `DataView`**: повна специфікація кадрів у Little-Endian; квантування кута в `Int16`; повний набір round-trip тестів; порівняльна таблиця JSON vs Binary.
-- [x] **Демонстрація двох гравців**: анімований GIF пліч-о-пліч у шапці `README.md`; детальний технічний звіт.
-- [x] **Git-тег**: `lab-05`.
+Original Ukrainian Lab 06 and Lab 05 reports, historical measurements, and submission checklists are preserved in [docs/lab-reports.md](docs/lab-reports.md). See [lab-06.md](lab-06.md) for the assignment and [lab-06.notes.md](lab-06.notes.md) for theory.
