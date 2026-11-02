@@ -10,6 +10,12 @@ import { query, errorMessage } from '../dom.ts'
  * 3. Кнопки тестування блокування Event Loop (/api/slow, M4) та стрімінгу повторів (/api/replays, M3).
  */
 
+function handleAsync(action: () => Promise<void>): () => void {
+  return () => {
+    action().catch(console.error)
+  }
+}
+
 import { gameConnection } from '../net/connection.ts'
 
 export class LobbyView {
@@ -19,11 +25,11 @@ export class LobbyView {
   /** @type {HTMLElement|null} */
   #container!: HTMLElement
 
-  #onJoinCallback: ((room: RoomData) => void) | undefined
+  #onJoinCallback: ((room: RoomData) => void | Promise<void>) | undefined
 
   constructor(
     lobby: Lobby,
-    { onJoin }: { onJoin?: (room: RoomData) => void } = {},
+    { onJoin }: { onJoin?: (room: RoomData) => void | Promise<void> } = {},
   ) {
     this.#lobby = lobby
     this.#onJoinCallback = onJoin
@@ -137,8 +143,9 @@ export class LobbyView {
     const btnJoin = query(this.#container, '#btn-join')
     btnJoin?.addEventListener('click', () => {
       const room = this.#lobby.join()
-      this.#onJoinCallback?.(room)
-      this.hide()
+      Promise.resolve(this.#onJoinCallback?.(room))
+        .then(() => this.hide())
+        .catch(console.error)
     })
 
     // Чат форма
@@ -291,14 +298,21 @@ export class LobbyView {
     // 0. Тест Блокування Event Loop (Lab 04 M4)
     query(this.#container, '#test-slow')?.addEventListener(
       'click',
-      async () => {
+      handleAsync(async () => {
         this.#logTest(
           'Відправка GET /api/slow?ms=300 (блокуючий цикл на сервері)...',
         )
         const t0 = performance.now()
         try {
           const res = await fetch('/api/slow?ms=300')
-          const data = await res.json()
+          const data: unknown = await res.json()
+          if (
+            !data ||
+            typeof data !== 'object' ||
+            !('blockedMs' in data) ||
+            typeof data.blockedMs !== 'number'
+          )
+            throw new Error('Invalid slow response')
           const dt = (performance.now() - t0).toFixed(1)
           this.#logTest(
             `[Node Single-Thread]: Сервер блокував потік на ${data.blockedMs}ms. Загальний час: ${dt}ms!`,
@@ -306,13 +320,13 @@ export class LobbyView {
         } catch (err) {
           this.#logTest(`Помилка запиту: ${errorMessage(err)}`, true)
         }
-      },
+      }),
     )
 
     // 1. Тест Таймауту
     query(this.#container, '#test-timeout')?.addEventListener(
       'click',
-      async () => {
+      handleAsync(async () => {
         this.#logTest(
           'Запуск запиту з жорстким таймаутом AbortSignal.timeout(100ms)...',
         )
@@ -324,29 +338,32 @@ export class LobbyView {
             true,
           )
         }
-      },
+      }),
     )
 
     // 2. Тест 404
-    query(this.#container, '#test-404')?.addEventListener('click', async () => {
-      this.#lobby.setApiUrl('/api/non-existent-sector-404.json')
-      this.#logTest(
-        'Встановлено URL 404. fetchJson перевіряє response.ok, withRetry не повторює 4xx.',
-      )
-      try {
-        await this.#lobby.refresh()
-      } catch (err) {
+    query(this.#container, '#test-404')?.addEventListener(
+      'click',
+      handleAsync(async () => {
+        this.#lobby.setApiUrl('/api/non-existent-sector-404.json')
         this.#logTest(
-          `Очікувана 404: ${err instanceof Error ? err.name : 'Error'} (${errorMessage(err)}) — спроби повтору заблоковано!`,
-          true,
+          'Встановлено URL 404. fetchJson перевіряє response.ok, withRetry не повторює 4xx.',
         )
-      }
-    })
+        try {
+          await this.#lobby.refresh()
+        } catch (err) {
+          this.#logTest(
+            `Очікувана 404: ${err instanceof Error ? err.name : 'Error'} (${errorMessage(err)}) — спроби повтору заблоковано!`,
+            true,
+          )
+        }
+      }),
+    )
 
     // 3. Тест AbortController
     query(this.#container, '#test-abort')?.addEventListener(
       'click',
-      async () => {
+      handleAsync(async () => {
         this.#logTest(
           'Запуск запиту та негайне скасування через controller.abort()...',
         )
@@ -360,13 +377,13 @@ export class LobbyView {
             true,
           )
         }
-      },
+      }),
     )
 
     // 4. Тест Corrupt JSON
     query(this.#container, '#test-badjson')?.addEventListener(
       'click',
-      async () => {
+      handleAsync(async () => {
         this.#lobby.setApiUrl('/assets/sprites.png')
         this.#logTest('Спроба розпарсити бінарний PNG як JSON...')
         try {
@@ -377,18 +394,18 @@ export class LobbyView {
             true,
           )
         }
-      },
+      }),
     )
 
     // 5. Відновлення normal API
     query(this.#container, '#test-reset')?.addEventListener(
       'click',
-      async () => {
+      handleAsync(async () => {
         this.#lobby.setApiUrl('/api/rooms')
         this.#logTest('URL скинуто до робочого: /api/rooms')
         this.#hideError()
         await this.#lobby.refresh().catch(() => {})
-      },
+      }),
     )
   }
 

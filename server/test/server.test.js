@@ -3,7 +3,7 @@
  * Використовує вбудований тестовий ранер node:test та node:assert/strict.
  */
 
-import { describe, it, before, after } from 'node:test'
+import { describe, it, beforeAll as before, afterAll as after } from 'vitest'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'

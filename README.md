@@ -1,6 +1,8 @@
+[![Lab checks](https://github.com/telare/dogfight-uni/actions/workflows/ci.yml/badge.svg)](https://github.com/telare/dogfight-uni/actions/workflows/ci.yml)
+
 # Dogfight — a guide for React developers
 
-Dogfight is a browser space game built across six JavaScript university labs. You steer a ship, shoot, dodge asteroids, collect pickups, and share an arena with other players. The current version uses **TypeScript, Canvas 2D, Vite, Node.js, WebSockets, and Zod**.
+Dogfight is a browser space game built across seven JavaScript university labs. You steer a ship, shoot, dodge asteroids, collect pickups, and share an arena with other players. The current version uses **TypeScript, Canvas 2D, Vite, Node.js, WebSockets, and Zod**.
 
 If you know React, the familiar parts are forms, asynchronous loading, UI state, and subscriptions. The new part is a simulation that advances continuously. The browser predicts movement for immediate feedback; the server runs the authoritative match and sends state back to each player. The current UI uses vanilla DOM and Canvas; React is a useful reference for understanding its architecture.
 
@@ -321,7 +323,7 @@ npm test
 npm run build
 ```
 
-Tests use Node's test runner with `tsx`. They cover determinism, codecs, matches, server behavior, connection handling, and migration regressions. The migration test reads simulation files from `lab-05` to compare behavior after 1000 steps. If your clone has no tags, run `git fetch --tags origin` first.
+Tests use Vitest with native TypeScript transformation. They cover determinism, codecs, matches, server behavior, connection handling, and migration regressions. The migration test reads simulation files from `lab-05` to compare behavior after 1000 steps. If your clone has no tags, run `git fetch --tags origin` first.
 
 Additional checks and experiments:
 
@@ -365,3 +367,21 @@ git show lab-03:README.md
 | [lab-06](https://github.com/telare/dogfight-uni/tree/lab-06) | Strict TypeScript, shared contracts, runtime validation |
 
 Original Ukrainian Lab 06 and Lab 05 reports, historical measurements, and submission checklists are preserved in [docs/lab-reports.md](docs/lab-reports.md). See [lab-06.md](lab-06.md) for the assignment and [lab-06.notes.md](lab-06.notes.md) for theory.
+
+
+## Lab 07: tests and measured performance
+
+The visible completion checklist is [TODO.md](TODO.md). See the [Lab 07 report](docs/lab-07.report.md) for measured before/after tables, sampled flame charts, the replay-worker decision, server capacity, and whiteboard reflections. Raw profiles and samples live in [docs/performance](docs/performance/).
+
+```bash
+npm test                 # Vitest, all three packages; includes earlier lab regressions
+npm run test:coverage    # shared statements, lines and functions must each reach 85%
+npx playwright install chromium
+npm run build
+npm run test:e2e         # two browser contexts, roster, movement within 500ms, chat
+npm run bench:suite -- after  # 60s server profile, 30s browser capture, worker, load ramp
+```
+
+Individual experiments: `npm run bench:sim -- after`, `npm run bench:browser -- after`, and `npm run bench:load`. The suite enables Node `--cpu-prof`; `bench:sim` alone collects tick samples. Load clients run in a separate process so server RSS and event-loop utilization exclude the load generator. Open `/?diagnostics=1` to enable bounded User Timing spans and the inspection interface; ordinary gameplay leaves timing disabled. Builds retain function names and source maps to make the profiles readable.
+
+Bots use the same `ShipInput` contract as human controls. Add them with `POST /api/rooms/room-alpha/bots`, JSON `{ "count": 8 }`; the endpoint validates integer counts and caps each match at 128 bots. The replay Web Worker transfers a packed binary replay and returns its decoded summary; interactive movement stays on the main thread.

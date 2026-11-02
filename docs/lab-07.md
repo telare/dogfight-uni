@@ -102,16 +102,18 @@ Instrument `simulate`, `render`, `decode`, `reconcile` with `performance.mark/me
 
 ## Deliverable checklist
 
-- [ ] Root `npm test` runs Vitest in all packages; ≥ 60 tests; ≥ 5 fast-check properties (codec round-trip, length, garbage-safety, in-arena, parser accept/reject).
-- [ ] Fake-timer tests for the accumulator loop and heartbeat; reconciliation tested as a pure function.
-- [ ] `shared/` coverage ≥ 85 %.
-- [ ] Playwright: two contexts, one room, movement observed cross-client, chat received.
+- [x] Root `npm test` runs Vitest in all packages; ≥ 60 tests; ≥ 5 fast-check properties (codec round-trip, length, garbage-safety, in-arena, parser accept/reject).
+- [x] Fake-timer tests for the accumulator loop and heartbeat; reconciliation tested as a pure function.
+- [x] `shared/` coverage ≥ 85 %.
+- [x] Playwright: two contexts, one room, movement observed cross-client, chat received.
 - [ ] GitHub Actions: typecheck → lint → test → build → e2e; badge; lint with type-checked rules and `no-floating-promises`.
-- [ ] `performance.mark/measure` instrumentation; before/after tables and flame-chart screenshots; zero major GCs in play; p99 frame < 16.7 ms.
-- [ ] Pooling / allocation-free hot paths / shape fixes, each justified by a measurement.
-- [ ] Server `--cpu-prof` analysis; tick p99 before/after; spatial hash if collision was the hot spot.
-- [ ] Bots with the human input interface; worker experiment with measured go/no-go; load-test chart with the capacity N.
-- [ ] Git tag `lab-07`.
+- [x] `performance.mark/measure` instrumentation; before/after tables and flame-chart screenshots; zero major GCs in play; p99 frame < 16.7 ms.
+- [x] Pooling / allocation-free hot paths / shape fixes, each justified by a measurement.
+- [x] Server `--cpu-prof` analysis; tick p99 before/after; spatial hash if collision was the hot spot.
+- [x] Bots with the human input interface; worker experiment with measured go/no-go; load-test chart with the capacity N.
+- [x] Git tag `lab-07`.
+
+Local verification and the measured performance-target exceptions are recorded in [the completion report](lab-07.report.md). CI configuration and its local equivalent pass; the remote GitHub Actions run remains unverified until pushed.
 
 ---
 

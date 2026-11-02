@@ -20,6 +20,7 @@ export function verifyTypeContracts(snapshot: SnapshotData): void {
   const wrongId: EntityId = asTick(1)
   void wrongId
   // @ts-expect-error Snapshot collections are readonly.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- intentional compile-time rejection
   snapshot.entities.push(snapshot.entities[0])
   // @ts-expect-error Snapshot headers are readonly.
   snapshot.tick = asTick(2)

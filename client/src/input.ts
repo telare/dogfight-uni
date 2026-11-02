@@ -34,6 +34,11 @@ export function createInput(target: Window) {
   const pressed = new Set()
 
   function onKeyDown(e: KeyboardEvent) {
+    if (
+      e.target instanceof Element &&
+      e.target.closest('input, textarea, [contenteditable]')
+    )
+      return
     if (GAME_KEYS.has(e.code)) {
       e.preventDefault()
     }

@@ -6,7 +6,10 @@ import tseslint from 'typescript-eslint'
 export default [
   { ignores: ['**/dist/**', 'node_modules/**'] },
   js.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: ['**/*.ts'],
+  })),
   {
     languageOptions: {
       ecmaVersion: 2024,
@@ -19,8 +22,18 @@ export default [
   },
   {
     files: ['**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { args: 'none', caughtErrors: 'none', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { args: 'none', caughtErrors: 'none', varsIgnorePattern: '^_' },
+      ],
     },
   },
   prettier,

@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'node:test'
+import { describe, it, beforeAll as before, afterAll as after } from 'vitest'
 import assert from 'node:assert/strict'
 import { once } from 'node:events'
 import { WebSocket } from 'ws'
@@ -299,6 +299,25 @@ describe('Lab 06: real WebSocket boundaries', () => {
     await new Promise((resolve) => wss.close(resolve))
     await new Promise((resolve) => server.close(resolve))
     await roomManager.closeAll()
+  })
+  it('validates the bot endpoint and reports bot counts and process metrics', async () => {
+    const base = url.replace('ws:', 'http:').replace('/ws', '')
+    for (const count of [0, -1, 1.5, 129, '8', null]) {
+      const response = await fetch(`${base}/api/rooms/room-alpha/bots`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count }),
+      })
+      assert.equal(response.status, 400)
+    }
+    const response = await fetch(`${base}/api/rooms/room-alpha/bots`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 8 }),
+    })
+    assert.equal(response.status, 201)
+    assert.deepEqual(await response.json(), { bots: 8 })
+    assert.equal((await fetch(`${base}/api/rooms/missing/bots`, { method: 'POST' })).status, 404)
+    const stats = await (await fetch(`${base}/api/stats`)).json()
+    assert.equal(stats.rooms.find(room => room.id === 'room-alpha').stats.botsCount, 8)
+    assert.equal(typeof stats.eventLoopUtilization.utilization, 'number')
+    assert.ok(Number(stats.rssMb) > 0)
   })
   for (const binary of [false, true]) {
     for (const type of ['input', 'ping', 'config']) {

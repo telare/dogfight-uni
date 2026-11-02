@@ -45,7 +45,7 @@ export class HudController {
       if (typeof score === 'number') {
         this.#score = score
       }
-      if (delta) {
+      if (typeof delta === 'number' && delta) {
         this.#scorePops.push({
           text: `+${delta}`,
           x: pos instanceof Vector2 ? pos.x : 200,
@@ -57,7 +57,7 @@ export class HudController {
     }
 
     const onPickup = (e: { detail: Record<string, unknown> }) => {
-      const type = e.detail?.type || 'bonus'
+      const type = typeof e.detail?.type === 'string' ? e.detail.type : 'bonus'
       this.#addFeed(`Отримано бонус: ${String(type).toUpperCase()}`, '#38bdf8')
     }
 

@@ -325,7 +325,9 @@ export function decodeSnapshot(
       (kind === 'pickup' && (flags < 1 || flags > 4))
     )
       throw new RangeError('Invalid entity flags')
-    entities.push(EntitySchema.parse(entity))
+    const parsed = EntitySchema.safeParse(entity)
+    if (!parsed.success) throw new RangeError('Invalid snapshot entity fields')
+    entities.push(parsed.data)
     offset += BINARY_SPEC.ENTITY_RECORD_SIZE
   }
 
@@ -474,7 +476,7 @@ export function decodeAnyBinary(
 ): ClientMessage | ServerMessage {
   const view = toDataView(bufferOrView)
   if (view.byteLength < 1) {
-    throw new Error('Empty binary frame')
+    throw new RangeError('Empty binary frame')
   }
 
   const type = view.getUint8(0)
@@ -490,6 +492,6 @@ export function decodeAnyBinary(
     case BinaryMessageType.CONFIG:
       return decodeConfig(view)
     default:
-      throw new Error(`Unknown binary message type id: ${type}`)
+      throw new RangeError(`Unknown binary message type id: ${type}`)
   }
 }

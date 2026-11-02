@@ -60,6 +60,7 @@ export function createStarfield(width: number, height: number, count = 160) {
       y: Math.abs((Math.sin(i * 78.233) * 24634.6345) % 1) * height,
       r: i % 6 === 0 ? 1.6 : 0.8,
       alpha: 0.3 + (Math.abs(Math.sin(i * 45.123)) % 0.7),
+      color: `rgba(180, 200, 240, ${0.3 + (Math.abs(Math.sin(i * 45.123)) % 0.7)})`,
     })
   }
   return stars
@@ -99,7 +100,7 @@ export function drawStarfield(
   stars: ReturnType<typeof createStarfield>,
 ) {
   for (const star of stars) {
-    ctx.fillStyle = `rgba(180, 200, 240, ${star.alpha})`
+    ctx.fillStyle = star.color
     ctx.beginPath()
     ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
     ctx.fill()

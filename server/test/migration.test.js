@@ -1,4 +1,4 @@
-import { it } from 'node:test'
+import { it } from 'vitest'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, writeFile, rm } from 'node:fs/promises'

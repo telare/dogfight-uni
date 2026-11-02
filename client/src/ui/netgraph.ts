@@ -245,10 +245,14 @@ export class Netgraph {
   /**
    * Оновлення телеметрії на кожному кадрі рендерингу
    */
+  private lastUpdate = -Infinity
+
   update() {
     if (!this.visible || !this.#metricsEl) return
 
     const now = performance.now()
+    if (now - this.lastUpdate < 100) return
+    this.lastUpdate = now
     const snapAge =
       this.connection.lastSnapshotTime > 0
         ? Math.round(now - this.connection.lastSnapshotTime)

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  build: { minify: false, sourcemap: true },
   server: {
     port: 5173,
     proxy: {
@@ -9,8 +10,14 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (err, req, res) => {
-            if (res && !res.headersSent && typeof res.writeHead === 'function') {
-              res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' })
+            if (
+              res &&
+              !res.headersSent &&
+              typeof res.writeHead === 'function'
+            ) {
+              res.writeHead(503, {
+                'Content-Type': 'application/json; charset=utf-8',
+              })
               res.end(
                 JSON.stringify({
                   error:
@@ -34,4 +41,3 @@ export default defineConfig({
     },
   },
 })
-

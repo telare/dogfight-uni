@@ -33,7 +33,7 @@ import { decodeAnyBinary, encodePong } from 'shared'
 /**
  * Простий алгоритм Token Bucket для обмеження швидкості повідомлень
  */
-class TokenBucket {
+export class TokenBucket {
   rate: number
   capacity: number
   tokens: number
@@ -328,7 +328,7 @@ export function attachWebSocketServer(
       clearTimeout(joinTimer)
       if (socket.currentRoom) {
         console.log(
-          `[WS] ${socket.playerId} відключився від ${socket.currentRoom.id} (код: ${code}, причина: ${reason || 'none'})`,
+          `[WS] ${socket.playerId} відключився від ${socket.currentRoom.id} (код: ${code}, причина: ${reason.toString() || 'none'})`,
         )
         socket.currentRoom.leave(socket.playerId)
         socket.currentRoom = null

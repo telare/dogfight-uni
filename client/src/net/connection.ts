@@ -1,3 +1,4 @@
+import { timed } from 'shared'
 import { Bus, type GameEvents } from './bus.ts'
 import {
   parseServerMessage,
@@ -117,6 +118,7 @@ export class GameConnection extends Bus<GameEvents> {
       this.#ws = socket
 
       socket.onopen = () => {
+        if (this.#ws !== socket) return
         console.log(
           `[WS] З'єднання встановлено з ${this.wsUrl} (binaryType: arraybuffer)`,
         )
@@ -142,6 +144,7 @@ export class GameConnection extends Bus<GameEvents> {
       }
 
       socket.onmessage = (event) => {
+        if (this.#ws !== socket) return
         let msg: unknown = null
         let byteLen = 0
 
@@ -150,7 +153,8 @@ export class GameConnection extends Bus<GameEvents> {
           this.#bytesInPeriod += byteLen
           this.#bytesInTotal += byteLen
           try {
-            msg = decodeAnyBinary(event.data)
+            const data: ArrayBuffer = event.data
+            msg = timed('decode', () => decodeAnyBinary(data))
           } catch (err) {
             console.warn('[WS Binary Decode Error]:', err)
             socket.close(4002, 'Invalid server message')
@@ -179,14 +183,16 @@ export class GameConnection extends Bus<GameEvents> {
       }
 
       socket.onerror = (err) => {
+        if (this.#ws !== socket) return
         console.error('[WS Error]', err)
         this.emit('error', {
           type: 'error',
-          message: err instanceof Error ? err.message : String(err),
+          message: err instanceof Error ? err.message : 'Unknown error',
         })
       }
 
       socket.onclose = (event) => {
+        if (this.#ws !== socket) return
         console.log(`[WS Closed] Код: ${event.code}, причина: ${event.reason}`)
         this.status = 'disconnected'
         this.#stopTimers()
@@ -202,7 +208,7 @@ export class GameConnection extends Bus<GameEvents> {
       this.#stopTimers()
       this.emit('error', {
         type: 'error',
-        message: err instanceof Error ? err.message : String(err),
+        message: err instanceof Error ? err.message : 'Unknown error',
       })
       this.#scheduleReconnect()
     }
@@ -456,6 +462,8 @@ export class GameConnection extends Bus<GameEvents> {
       this.#ws = null
     }
     this.status = 'disconnected'
+    this.playerId = null
+    this.shipId = null
     this.roster = []
     this.#sendQueue = []
   }

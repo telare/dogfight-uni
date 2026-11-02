@@ -363,7 +363,7 @@ export class RoomManager {
   deleteRoom(id: string) {
     const room = this.#rooms.get(id)
     if (room) {
-      room.destroy()
+      room.destroy().catch((error: unknown) => console.error(error))
       this.#rooms.delete(id)
       return true
     }

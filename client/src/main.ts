@@ -1,3 +1,5 @@
+import { enableTiming, timed, type EntityData } from 'shared'
+import { runReplayExperiment } from './net/replayExperiment.ts'
 import { query } from './dom.ts'
 import type { LoadedAssets, LoadProgress } from './assets/loader.ts'
 import type { LoopStats } from './loop.ts'
@@ -36,6 +38,11 @@ import { InterpolationManager } from './net/interpolation.ts'
 import { Netgraph } from './ui/netgraph.ts'
 
 // Стан додатку
+const diagnosticsEnabled = new URLSearchParams(location.search).has(
+  'diagnostics',
+)
+enableTiming(diagnosticsEnabled)
+let renderedRemote: readonly EntityData[] = []
 let gameState = 'loading' // 'loading' | 'lobby' | 'playing'
 let loadingProgress: Omit<LoadProgress, 'item'> & { error?: unknown } = {
   progress: 0,
@@ -109,6 +116,7 @@ function runThisExperiment() {
       console.log(
         '--- [Lab 02/03] Експеримент: Небезпечний виклик ship.fire без this ---',
       )
+      // eslint-disable-next-line @typescript-eslint/unbound-method -- intentional Lab 02 failure demonstration
       const detachedFire = ship.fire
       detachedFire(null)
     } catch (err) {
@@ -153,7 +161,9 @@ gameConnection.on('snapshot', (e) => {
 
   // 2. Звірка локального корабля з авторитетним станом сервера (Reconciliation & Replay, M2)
   if (ship && world) {
-    prediction.reconcile(snapshot, ship, world)
+    timed('reconcile', () => {
+      if (ship && world) prediction.reconcile(snapshot, ship, world)
+    })
   }
 })
 
@@ -223,7 +233,7 @@ function setupWorldForRoom(room: Pick<RoomData, 'id' | 'name' | 'difficulty'>) {
 // Стрільба кліком миші та розблокування звуку
 window.addEventListener('click', (e) => {
   if (!(e.target instanceof Element)) return
-  soundSystem.unlock()
+  soundSystem.unlock().catch(console.error)
 
   if (gameState !== 'playing') return
   if (
@@ -316,6 +326,7 @@ function render(alpha: number, stats: LoopStats) {
 
     // Інтерпольовані сутності з мережі (інші кораблі, ворожі кулі, M3)
     const remoteEntities = interpolation.getInterpolatedEntities(ship.id)
+    if (diagnosticsEnabled) renderedRemote = remoteEntities
 
     drawWorldEntities(
       ctx,
@@ -341,11 +352,34 @@ function render(alpha: number, stats: LoopStats) {
   }
 }
 
-const loop = createLoop({ simulate, render })
+const loop = createLoop({
+  simulate: (dt) => timed('simulate', () => simulate(dt)),
+  render: (alpha, stats) => timed('render', () => render(alpha, stats)),
+})
+
+if (diagnosticsEnabled) {
+  Object.defineProperty(window, '__dogfight', {
+    value: {
+      connection: gameConnection,
+      get remote() {
+        return renderedRemote
+      },
+      get state() {
+        return gameState
+      },
+      runReplayExperiment,
+    },
+  })
+}
 
 // Гарячі клавіші
 window.addEventListener('keydown', (e) => {
-  soundSystem.unlock()
+  if (
+    e.target instanceof Element &&
+    e.target.closest('input, textarea, [contenteditable]')
+  )
+    return
+  soundSystem.unlock().catch(console.error)
 
   if (e.code === 'Escape' || e.code === 'KeyL') {
     if (gameState === 'playing') {
@@ -375,9 +409,11 @@ window.addEventListener('keydown', (e) => {
     console.log(`[Lab 03] Заспавнено бонус (${type})`)
   } else if (e.code === 'KeyB') {
     console.log('[Lab 03] Запуск тесту бенчмарку завантаження ассетів...')
-    runAssetBenchmark({ ctx: soundSystem.context, runs: 2 }).then((res) => {
-      hudExtra.lastThisBugLog = `[Бенчмарк]: all: ${res.parAvgMs.toFixed(1)}ms vs seq: ${res.seqAvgMs.toFixed(1)}ms (${res.speedupFactor.toFixed(1)}x)`
-    })
+    runAssetBenchmark({ ctx: soundSystem.context, runs: 2 })
+      .then((res) => {
+        hudExtra.lastThisBugLog = `[Бенчмарк]: all: ${res.parAvgMs.toFixed(1)}ms vs seq: ${res.seqAvgMs.toFixed(1)}ms (${res.speedupFactor.toFixed(1)}x)`
+      })
+      .catch(console.error)
   } else if (e.code === 'Digit1') {
     const active = loop.toggleBusyWait()
     console.log(`[Lab 01] Busy-Wait: ${active ? 'ON' : 'OFF'}`)
@@ -443,4 +479,4 @@ async function startApplication() {
   }
 }
 
-startApplication()
+startApplication().catch(console.error)

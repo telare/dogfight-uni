@@ -1,6 +1,6 @@
 import {
   asSeq,
-  binaryCodec,
+  encodeSnapshot,
   jsonCodec,
   type InputFrame,
   type ShipInput,
@@ -21,8 +21,30 @@ import type { Room, Player } from './rooms.ts'
 
 import { World, Ship } from 'shared'
 import { LatencyInjector } from './latency.ts'
+import { Bot } from './bot.ts'
 
 export class Match {
+  bots = new Map<string, Bot>()
+  private nextBotId = 1
+  private inputsMap = new Map<number | string, ShipInput>()
+
+  addBots(count: number) {
+    if (
+      !Number.isInteger(count) ||
+      count < 1 ||
+      count > 128 ||
+      this.bots.size + count > 128
+    )
+      throw new RangeError(
+        'Bot count must be 1–128, with at most 128 bots per match',
+      )
+    for (let i = 0; i < count; i++) {
+      const id = `bot-${this.nextBotId++}`
+      this.addPlayer({ id, name: id })
+      this.bots.set(id, new Bot())
+    }
+    return this.bots.size
+  }
   room: Room | undefined
   timerId: ReturnType<typeof setTimeout> | null
   tickDurations: number[]
@@ -158,6 +180,7 @@ export class Match {
    * Видалення корабля при виході гравця
    */
   removePlayer(playerId: string) {
+    this.bots.delete(playerId)
     const ship = this.playerShips.get(playerId)
     if (ship) {
       this.world.despawn(ship.id)
@@ -200,9 +223,12 @@ export class Match {
     this.tickNumber++
 
     // Підготовка вхідних даних для кожного активного корабля
-    const inputsMap = new Map<number | string, ShipInput>()
+    const inputsMap = this.inputsMap
+    inputsMap.clear()
     for (const [playerId, ship] of this.playerShips) {
-      const input = this.pendingInputs.get(playerId)
+      const input =
+        this.bots.get(playerId)?.update(ship, this.world) ??
+        this.pendingInputs.get(playerId)
       if (input) {
         inputsMap.set(ship.id, input)
       }
@@ -235,6 +261,7 @@ export class Match {
     const now = Date.now()
     const rawSnapshot = this.world.getSnapshot(this.tickNumber, now, 0)
 
+    const binary = this.codec === 'binary' ? encodeSnapshot(rawSnapshot) : null
     for (const [playerId, playerData] of this.room.players) {
       const ws = playerData.socket
       if (!ws || ws.readyState !== 1) continue // 1 = OPEN
@@ -243,9 +270,10 @@ export class Match {
       const snapshot = { ...rawSnapshot, ackSeq: asSeq(ackSeq) }
 
       const codec = this.codec
-      const payload = (codec === 'binary' ? binaryCodec : jsonCodec).encode(
-        snapshot,
-      )
+      const payload = binary ? binary.slice(0) : jsonCodec.encode(snapshot)
+      if (payload instanceof ArrayBuffer && binary) {
+        new DataView(payload).setUint32(10, ackSeq, true)
+      }
 
       this.latencyInjector.deliver(() => {
         if (ws.readyState === 1) {
@@ -282,6 +310,11 @@ export class Match {
       targetIntervalMs: Number(this.tickIntervalMs.toFixed(2)),
       avgDurationMs: Number(avgDuration.toFixed(3)),
       maxDurationMs: Number(this.maxDurationMs.toFixed(3)),
+      tickP99Ms:
+        [...this.tickDurations].sort((a, b) => a - b)[
+          Math.max(0, Math.ceil(this.tickDurations.length * 0.99) - 1)
+        ] ?? 0,
+      botsCount: this.bots.size,
       avgJitterMs: Number(avgJitter.toFixed(3)),
       maxJitterMs: Number(this.maxJitterMs.toFixed(3)),
       overrunCount: this.overrunCount,

@@ -12,6 +12,7 @@ import { CreateRoomSchema } from 'shared'
  */
 
 import http from 'node:http'
+import { performance } from 'node:perf_hooks'
 import fs from 'node:fs'
 import path from 'node:path'
 import { config } from './config.ts'
@@ -46,14 +47,14 @@ function readJsonBody(
     let body = ''
     let receivedBytes = 0
 
-    req.on('data', (chunk) => {
+    req.on('data', (chunk: Buffer) => {
       receivedBytes += chunk.length
       if (receivedBytes > maxBytes) {
         req.destroy()
         reject(new Error('Payload Too Large'))
         return
       }
-      body += chunk
+      body += chunk.toString()
     })
 
     req.on('end', () => {
@@ -151,7 +152,7 @@ function serveStaticFile(
 /**
  * Головний обробник HTTP запитів
  */
-export const server = http.createServer(async (req, res) => {
+async function handleRequest(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(
     req.url ?? '/',
     `http://${req.headers.host || 'localhost'}`,
@@ -176,6 +177,36 @@ export const server = http.createServer(async (req, res) => {
   }
 
   // 2. GET /api/rooms
+  const botRoute = /^\/api\/rooms\/([^/]+)\/bots$/.exec(pathname)
+  if (botRoute && req.method === 'POST') {
+    const room = roomManager.getRoom(botRoute[1] ?? '')
+    if (!room) {
+      res.writeHead(404)
+      res.end()
+      return
+    }
+    try {
+      const body = await readJsonBody(req)
+      if (
+        typeof body !== 'object' ||
+        body === null ||
+        !('count' in body) ||
+        typeof body.count !== 'number'
+      )
+        throw new Error('Expected { count: integer }')
+      const bots = room.match.addBots(body.count)
+      res.writeHead(201, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ bots }))
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'application/json' })
+      res.end(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      )
+    }
+    return
+  }
   if (pathname === '/api/rooms' && req.method === 'GET') {
     res.writeHead(200, {
       'Content-Type': 'application/json',
@@ -237,6 +268,7 @@ export const server = http.createServer(async (req, res) => {
         rssMb: (memory.rss / 1024 / 1024).toFixed(2),
         heapUsedMb: (memory.heapUsed / 1024 / 1024).toFixed(2),
         rooms: roomsStats,
+        eventLoopUtilization: performance.eventLoopUtilization(),
         timestamp: Date.now(),
       }),
     )
@@ -290,6 +322,13 @@ export const server = http.createServer(async (req, res) => {
 
   // 6. Роздача статичних файлів клієнта client/dist
   serveStaticFile(req, res, pathname)
+}
+export const server = http.createServer((req, res) => {
+  handleRequest(req, res).catch((error: unknown) => {
+    console.error(error)
+    if (!res.headersSent) res.writeHead(500)
+    res.end('Internal Server Error')
+  })
 })
 
 // Прикріплюємо WebSocket сервер на шлях /ws
@@ -318,8 +357,12 @@ export async function gracefulShutdown(signal = 'SIGINT') {
   process.exit(0)
 }
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'))
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGINT', () => {
+  gracefulShutdown('SIGINT').catch(console.error)
+})
+process.on('SIGTERM', () => {
+  gracefulShutdown('SIGTERM').catch(console.error)
+})
 
 // Запуск сервера, якщо файл виконується напряму
 if (process.argv[1] && process.argv[1].endsWith('index.ts')) {

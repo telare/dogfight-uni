@@ -1,0 +1,221 @@
+--- a/client/src/render/draw.ts
++++ b/client/src/render/draw.ts
+@@ -60,6 +60,7 @@
+       y: Math.abs((Math.sin(i * 78.233) * 24634.6345) % 1) * height,
+       r: i % 6 === 0 ? 1.6 : 0.8,
+       alpha: 0.3 + (Math.abs(Math.sin(i * 45.123)) % 0.7),
++      color: `rgba(180, 200, 240, ${0.3 + (Math.abs(Math.sin(i * 45.123)) % 0.7)})`,
+     })
+   }
+   return stars
+@@ -99,7 +100,7 @@
+   stars: ReturnType<typeof createStarfield>,
+ ) {
+   for (const star of stars) {
+-    ctx.fillStyle = `rgba(180, 200, 240, ${star.alpha})`
++    ctx.fillStyle = star.color
+     ctx.beginPath()
+     ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
+     ctx.fill()
+--- a/client/src/net/interpolation.ts
++++ b/client/src/net/interpolation.ts
+@@ -12,7 +12,8 @@
+  *    - Кут обертання за найкоротшою дугою кола (angle slerp).
+  */
+ 
+-import { Vector2 } from 'shared'
++type Mutable<T> = { -readonly [K in keyof T]: T[K] }
++type RenderEntity = Mutable<EntityData> & { pos: { x: number; y: number } }
+ 
+ function normalizeAngle(a: number) {
+   const tau = Math.PI * 2
+@@ -27,6 +28,10 @@
+ }
+ 
+ export class InterpolationManager {
++  private lookup = new Map<number, EntityData>()
++  private rendered = new Map<number, RenderEntity>()
++  private output: RenderEntity[] = []
++  private activeIds = new Set<number>()
+   buffer: { arrivalTime: number; snapshot: SnapshotData }[]
+ 
+   enabled: boolean
+@@ -51,6 +56,10 @@
+   }
+ 
+   reset() {
++    this.lookup.clear()
++    this.rendered.clear()
++    this.output.length = 0
++    this.activeIds.clear()
+     this.buffer = []
+   }
+ 
+@@ -121,16 +130,27 @@
+         ? Math.max(0, Math.min(1, (renderTime - s0.arrivalTime) / timeDelta))
+         : 1
+ 
+-    const s0Map = new Map<number, EntityData>()
++    const s0Map = this.lookup
++    s0Map.clear()
+     for (const e of s0.snapshot.entities || []) {
+       if (e.id !== localShipId) s0Map.set(e.id, e)
+     }
+ 
+-    const interpolatedEntities = []
++    const interpolatedEntities = this.output
++    interpolatedEntities.length = 0
++    this.activeIds.clear()
+ 
+     for (const e1 of s1.snapshot.entities || []) {
+       if (e1.id === localShipId) continue
+ 
++      this.activeIds.add(e1.id)
++      let record = this.rendered.get(e1.id)
++      if (!record || record.kind !== e1.kind) {
++        record = { ...e1, pos: { x: e1.x, y: e1.y } }
++        this.rendered.set(e1.id, record)
++      }
++      // Copy optional fields too; a kind change creates a fresh, consistent shape.
++      Object.assign(record, e1)
+       const e0 = s0Map.get(e1.id)
+       if (e0) {
+         // Інтерполюємо між e0 та e1
+@@ -151,23 +171,18 @@
+         const y = p0Y + (p1Y - p0Y) * alpha
+         const angle = lerpAngle(e0.angle, e1.angle, alpha)
+ 
+-        interpolatedEntities.push({
+-          ...e1,
+-          x: ((x % this.arenaWidth) + this.arenaWidth) % this.arenaWidth,
+-          y: ((y % this.arenaHeight) + this.arenaHeight) % this.arenaHeight,
+-          pos: new Vector2(
+-            ((x % this.arenaWidth) + this.arenaWidth) % this.arenaWidth,
+-            ((y % this.arenaHeight) + this.arenaHeight) % this.arenaHeight,
+-          ),
+-          angle,
+-        })
+-      } else {
+-        // Сутність щойно з'явилася в s1
+-        interpolatedEntities.push({
+-          ...e1,
+-          pos: new Vector2(e1.x, e1.y),
+-        })
++        record.x = ((x % this.arenaWidth) + this.arenaWidth) % this.arenaWidth
++        record.y =
++          ((y % this.arenaHeight) + this.arenaHeight) % this.arenaHeight
++        record.angle = angle
+       }
++      record.pos.x = record.x
++      record.pos.y = record.y
++      interpolatedEntities.push(record)
++    }
++    // No entity survives in the cache after it leaves the rendered snapshot.
++    for (const id of this.rendered.keys()) {
++      if (!this.activeIds.has(id)) this.rendered.delete(id)
+     }
+ 
+     return interpolatedEntities
+--- a/client/src/ui/netgraph.ts
++++ b/client/src/ui/netgraph.ts
+@@ -245,10 +245,14 @@
+   /**
+    * Оновлення телеметрії на кожному кадрі рендерингу
+    */
++  private lastUpdate = -Infinity
++
+   update() {
+     if (!this.visible || !this.#metricsEl) return
+ 
+     const now = performance.now()
++    if (now - this.lastUpdate < 100) return
++    this.lastUpdate = now
+     const snapAge =
+       this.connection.lastSnapshotTime > 0
+         ? Math.round(now - this.connection.lastSnapshotTime)
+--- a/server/src/match.ts
++++ b/server/src/match.ts
+@@ -1,6 +1,6 @@
+ import {
+   asSeq,
+-  binaryCodec,
++  encodeSnapshot,
+   jsonCodec,
+   type InputFrame,
+   type ShipInput,
+@@ -29,8 +29,15 @@
+   private inputsMap = new Map<number | string, ShipInput>()
+ 
+   addBots(count: number) {
+-    if (!Number.isInteger(count) || count < 1 || count > 128 || this.bots.size + count > 128)
+-      throw new RangeError('Bot count must be 1–128, with at most 128 bots per match')
++    if (
++      !Number.isInteger(count) ||
++      count < 1 ||
++      count > 128 ||
++      this.bots.size + count > 128
++    )
++      throw new RangeError(
++        'Bot count must be 1–128, with at most 128 bots per match',
++      )
+     for (let i = 0; i < count; i++) {
+       const id = `bot-${this.nextBotId++}`
+       this.addPlayer({ id, name: id })
+@@ -219,7 +226,9 @@
+     const inputsMap = this.inputsMap
+     inputsMap.clear()
+     for (const [playerId, ship] of this.playerShips) {
+-      const input = this.bots.get(playerId)?.update(ship, this.world) ?? this.pendingInputs.get(playerId)
++      const input =
++        this.bots.get(playerId)?.update(ship, this.world) ??
++        this.pendingInputs.get(playerId)
+       if (input) {
+         inputsMap.set(ship.id, input)
+       }
+@@ -252,6 +261,7 @@
+     const now = Date.now()
+     const rawSnapshot = this.world.getSnapshot(this.tickNumber, now, 0)
+ 
++    const binary = this.codec === 'binary' ? encodeSnapshot(rawSnapshot) : null
+     for (const [playerId, playerData] of this.room.players) {
+       const ws = playerData.socket
+       if (!ws || ws.readyState !== 1) continue // 1 = OPEN
+@@ -260,9 +270,10 @@
+       const snapshot = { ...rawSnapshot, ackSeq: asSeq(ackSeq) }
+ 
+       const codec = this.codec
+-      const payload = (codec === 'binary' ? binaryCodec : jsonCodec).encode(
+-        snapshot,
+-      )
++      const payload = binary ? binary.slice(0) : jsonCodec.encode(snapshot)
++      if (payload instanceof ArrayBuffer && binary) {
++        new DataView(payload).setUint32(10, ackSeq, true)
++      }
+ 
+       this.latencyInjector.deliver(() => {
+         if (ws.readyState === 1) {
+@@ -299,7 +310,10 @@
+       targetIntervalMs: Number(this.tickIntervalMs.toFixed(2)),
+       avgDurationMs: Number(avgDuration.toFixed(3)),
+       maxDurationMs: Number(this.maxDurationMs.toFixed(3)),
+-      tickP99Ms: [...this.tickDurations].sort((a, b) => a - b)[Math.max(0, Math.ceil(this.tickDurations.length * 0.99) - 1)] ?? 0,
++      tickP99Ms:
++        [...this.tickDurations].sort((a, b) => a - b)[
++          Math.max(0, Math.ceil(this.tickDurations.length * 0.99) - 1)
++        ] ?? 0,
+       botsCount: this.bots.size,
+       avgJitterMs: Number(avgJitter.toFixed(3)),
+       maxJitterMs: Number(this.maxJitterMs.toFixed(3)),
+--- a/shared/src/codec/binaryCodec.ts
++++ b/shared/src/codec/binaryCodec.ts
+@@ -325,7 +325,9 @@
+       (kind === 'pickup' && (flags < 1 || flags > 4))
+     )
+       throw new RangeError('Invalid entity flags')
+-    entities.push(EntitySchema.parse(entity))
++    const parsed = EntitySchema.safeParse(entity)
++    if (!parsed.success) throw new RangeError('Invalid snapshot entity fields')
++    entities.push(parsed.data)
+     offset += BINARY_SPEC.ENTITY_RECORD_SIZE
+   }
+ 

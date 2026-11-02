@@ -9,7 +9,7 @@
  * 4. Штучне порушення детермінізму (Math.random) обов'язково фіксується розходженням хешів.
  */
 
-import { describe, it } from 'node:test'
+import { describe, it } from 'vitest'
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 import {

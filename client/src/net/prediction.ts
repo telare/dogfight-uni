@@ -14,6 +14,7 @@ import type { Ship, World, SnapshotData, ShipInput } from 'shared'
  */
 
 import { Vector2, wrap } from 'shared'
+import { reconcileState } from './reconcile.ts'
 
 export class PredictionManager {
   pendingInputs: {
@@ -136,7 +137,7 @@ export class PredictionManager {
       (e) => e.kind === 'ship' && e.id === localShip.id,
     )
 
-    if (!authoritativeShip) return
+    if (!authoritativeShip || authoritativeShip.kind !== 'ship') return
 
     const posBeforeRecon = localShip.pos.clone()
 
@@ -149,10 +150,16 @@ export class PredictionManager {
 
     // 2. Повторно застосовуємо (Replay) усі непідтверджені команди
     this.lastReplayCount = this.pendingInputs.length
-    for (const pending of this.pendingInputs) {
-      localShip.stepInput(pending.input, pending.dt, world)
-      wrap(localShip, world.arenaWidth, world.arenaHeight)
-    }
+    const replayed = reconcileState(
+      authoritativeShip,
+      this.pendingInputs,
+      ackSeq,
+      world.arenaWidth,
+      world.arenaHeight,
+    )
+    localShip.pos = replayed.pos
+    localShip.vel = replayed.vel
+    localShip.angle = replayed.angle
 
     // 3. Розрахунок магнітуди корекції (похибки передбачення з урахуванням тороїдальної арени)
     let dx = Math.abs(posBeforeRecon.x - localShip.pos.x)

@@ -21,3 +21,9 @@ DEMO_GUIDE.md
 /scripts/server-types.py
 /scripts/shared-types.py
 
+
+coverage/
+playwright-report/
+test-results/
+
+/logs/lab07-measurement.log

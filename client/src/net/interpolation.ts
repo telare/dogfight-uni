@@ -12,7 +12,8 @@ import type { SnapshotData, EntityData } from 'shared'
  *    - Кут обертання за найкоротшою дугою кола (angle slerp).
  */
 
-import { Vector2 } from 'shared'
+type Mutable<T> = { -readonly [K in keyof T]: T[K] }
+type RenderEntity = Mutable<EntityData> & { pos: { x: number; y: number } }
 
 function normalizeAngle(a: number) {
   const tau = Math.PI * 2
@@ -27,6 +28,10 @@ function lerpAngle(a: number, b: number, t: number) {
 }
 
 export class InterpolationManager {
+  private lookup = new Map<number, EntityData>()
+  private rendered = new Map<number, RenderEntity>()
+  private output: RenderEntity[] = []
+  private activeIds = new Set<number>()
   buffer: { arrivalTime: number; snapshot: SnapshotData }[]
 
   enabled: boolean
@@ -51,6 +56,10 @@ export class InterpolationManager {
   }
 
   reset() {
+    this.lookup.clear()
+    this.rendered.clear()
+    this.output.length = 0
+    this.activeIds.clear()
     this.buffer = []
   }
 
@@ -121,16 +130,27 @@ export class InterpolationManager {
         ? Math.max(0, Math.min(1, (renderTime - s0.arrivalTime) / timeDelta))
         : 1
 
-    const s0Map = new Map<number, EntityData>()
+    const s0Map = this.lookup
+    s0Map.clear()
     for (const e of s0.snapshot.entities || []) {
       if (e.id !== localShipId) s0Map.set(e.id, e)
     }
 
-    const interpolatedEntities = []
+    const interpolatedEntities = this.output
+    interpolatedEntities.length = 0
+    this.activeIds.clear()
 
     for (const e1 of s1.snapshot.entities || []) {
       if (e1.id === localShipId) continue
 
+      this.activeIds.add(e1.id)
+      let record = this.rendered.get(e1.id)
+      if (!record || record.kind !== e1.kind) {
+        record = { ...e1, pos: { x: e1.x, y: e1.y } }
+        this.rendered.set(e1.id, record)
+      }
+      // Copy optional fields too; a kind change creates a fresh, consistent shape.
+      Object.assign(record, e1)
       const e0 = s0Map.get(e1.id)
       if (e0) {
         // Інтерполюємо між e0 та e1
@@ -151,23 +171,18 @@ export class InterpolationManager {
         const y = p0Y + (p1Y - p0Y) * alpha
         const angle = lerpAngle(e0.angle, e1.angle, alpha)
 
-        interpolatedEntities.push({
-          ...e1,
-          x: ((x % this.arenaWidth) + this.arenaWidth) % this.arenaWidth,
-          y: ((y % this.arenaHeight) + this.arenaHeight) % this.arenaHeight,
-          pos: new Vector2(
-            ((x % this.arenaWidth) + this.arenaWidth) % this.arenaWidth,
-            ((y % this.arenaHeight) + this.arenaHeight) % this.arenaHeight,
-          ),
-          angle,
-        })
-      } else {
-        // Сутність щойно з'явилася в s1
-        interpolatedEntities.push({
-          ...e1,
-          pos: new Vector2(e1.x, e1.y),
-        })
+        record.x = ((x % this.arenaWidth) + this.arenaWidth) % this.arenaWidth
+        record.y =
+          ((y % this.arenaHeight) + this.arenaHeight) % this.arenaHeight
+        record.angle = angle
       }
+      record.pos.x = record.x
+      record.pos.y = record.y
+      interpolatedEntities.push(record)
+    }
+    // No entity survives in the cache after it leaves the rendered snapshot.
+    for (const id of this.rendered.keys()) {
+      if (!this.activeIds.has(id)) this.rendered.delete(id)
     }
 
     return interpolatedEntities

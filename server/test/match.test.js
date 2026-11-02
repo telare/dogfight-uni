@@ -2,7 +2,7 @@
  * Lab 05 — Тести авторитетного матчу (Match), таймера 30 Hz та Latency Injector
  */
 
-import { describe, it } from 'node:test'
+import { describe, it } from 'vitest'
 import assert from 'node:assert/strict'
 import { Match } from '../src/match.ts'
 import { LatencyInjector } from '../src/latency.ts'

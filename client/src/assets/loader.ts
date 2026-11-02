@@ -222,20 +222,7 @@ export async function loadAudio(
   }
 
   // Декодування сирих байтів у PCM AudioBuffer
-  return await new Promise<AudioBuffer>((resolve, reject) => {
-    try {
-      const res = ctx.decodeAudioData(
-        arrayBuffer.slice(0),
-        (buffer) => resolve(buffer),
-        (err) => reject(err || new Error(`Failed to decode audio: ${url}`)),
-      )
-      if (res && typeof res.then === 'function') {
-        res.then(resolve).catch(reject)
-      }
-    } catch (err) {
-      reject(err)
-    }
-  })
+  return ctx.decodeAudioData(arrayBuffer.slice(0))
 }
 
 /**

@@ -126,7 +126,7 @@ export function renderLoadingScreen(
   if (error) {
     ctx.fillStyle = '#ef4444'
     ctx.fillText(
-      `Помилка: ${error instanceof Error ? error.message : String(error)}`,
+      `Помилка: ${error instanceof Error ? error.message : 'Unknown error'}`,
       centerX,
       barY + barH + 60,
     )
