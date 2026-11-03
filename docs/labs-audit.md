@@ -137,7 +137,7 @@ Evidence: [report](lab-07.report.md), [raw profiles/results](performance/), [tes
 | --- | --- | --- | --- |
 | 07.1 | >=60 Vitest tests, >=5 stated properties | Supported with scope note | 106 current tests; seven properties. Parser properties cover selected generated message/mutation domains, not literally every possible mutation (some mutations remain valid). |
 | 07.2 | Fake timers for loop/heartbeat, pure reconcile tests | Supported | Client/server lab07 tests and reconciliation module. |
-| 07.3 | Shared coverage >=85% | Supported | Fresh run: 92.55% lines, 91.61% statements, 91.17% functions; 77.26% branches reported separately. |
+| 07.3 | Shared coverage >=85% | Supported | Fresh run: 93.63% lines, 92.63% statements, 91.91% functions; 77.66% branches reported separately. |
 | 07.4 | Two-context roster, movement <500 ms, chat | Supported | Multiplayer Playwright test passes locally and remotely. |
 | 07.5 | Typed lint/no-floating-promises, CI and badge | Supported | Config and successful [HEAD CI](https://github.com/telare/dogfight-uni/actions/runs/41700697124). |
 | 07.6 | Before/after marks/profiles; zero major GC and <16.7 ms p99 | Partial, explained | Real profiles, flame charts, 30 s browser and 60 s server results exist. Frame p99 remains 16.8 ms; major GC 39→20, not zero. DoD permits a precise limits explanation; strict checklist targets are still unmet. |

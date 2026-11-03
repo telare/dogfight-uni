@@ -1,4 +1,3 @@
-
-> dogfight@0.1.0 lint
-> eslint client/src server/src shared/src
-
+> dogfight@0.1.0 lint
+
+> eslint client/src server/src shared/src

@@ -1,132 +1,261 @@
-
-> dogfight@0.1.0 test:coverage
-> vitest run --coverage
-
-
- RUN  v5.1.0 D:/uni/4th/js
-      Coverage enabled with v8
-
-{"level":30,"time":1793733185342,"version":"dev","event":"room.created","roomId":"room-alpha"}
-{"level":30,"time":1793733185341,"version":"dev","event":"room.created","roomId":"room-alpha"}
-{"level":30,"time":1793733185342,"version":"dev","event":"room.created","roomId":"room-nebula"}
-{"level":30,"time":1793733185342,"version":"dev","event":"room.created","roomId":"room-void"}
-{"level":30,"time":1793733185343,"version":"dev","event":"room.created","roomId":"room-nebula"}
-{"level":30,"time":1793733185343,"version":"dev","event":"room.created","roomId":"room-void"}
-{"level":30,"time":1793733185459,"version":"dev","event":"room.created","roomId":"room-1793733185458-261"}
-{"level":30,"time":1793733185550,"version":"dev","event":"player.left","playerId":"pilot-mw12fbwm-z9u1","code":1005}
-{"level":30,"time":1793733185554,"version":"dev","event":"player.joined","playerId":"pilot-mw12fbwt-hdmm","roomId":"room-alpha"}
-{"level":30,"time":1793733185619,"version":"dev","event":"player.joined","playerId":"pilot-mw12fbwu-xexh","roomId":"room-alpha"}
-{"level":30,"time":1793733185739,"version":"dev","event":"player.left","playerId":"pilot-mw12fbwu-xexh","code":1000}
-{"level":30,"time":1793733185804,"version":"dev","event":"player.left","playerId":"pilot-mw12fbwt-hdmm","roomId":"room-alpha","code":1005}
-{"level":40,"time":1793733185873,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc58-lscz"}
-{"level":30,"time":1793733185877,"version":"dev","event":"player.left","playerId":"pilot-mw12fc58-lscz","code":1008}
-{"level":40,"time":1793733185890,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc5z-5nrx"}
-{"level":30,"time":1793733185903,"version":"dev","event":"player.left","playerId":"pilot-mw12fc5z-5nrx","code":1008}
-{"level":40,"time":1793733185916,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc6q-6lmm"}
-{"level":30,"time":1793733185918,"version":"dev","event":"player.left","playerId":"pilot-mw12fc6q-6lmm","code":1008}
-{"level":30,"time":1793733185925,"version":"dev","event":"player.left","playerId":"pilot-mw12fc73-2nb1","code":1006}
-{"level":40,"time":1793733185933,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc79-wc2y"}
-{"level":30,"time":1793733185934,"version":"dev","event":"player.left","playerId":"pilot-mw12fc79-wc2y","code":1008}
-{"level":40,"time":1793733185943,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc7j-xpui"}
-{"level":30,"time":1793733185945,"version":"dev","event":"player.left","playerId":"pilot-mw12fc7j-xpui","code":1008}
-{"level":40,"time":1793733185954,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc7u-gn6p"}
-{"level":30,"time":1793733185955,"version":"dev","event":"player.left","playerId":"pilot-mw12fc7u-gn6p","code":1008}
-{"level":30,"time":1793733185960,"version":"dev","event":"player.left","playerId":"pilot-mw12fc84-i8mk","code":1006}
-{"level":30,"time":1793733185961,"version":"dev","event":"player.joined","playerId":"pilot-mw12fc88-iqki","roomId":"room-alpha"}
-{"level":30,"time":1793733186026,"version":"dev","event":"player.left","playerId":"pilot-mw12fc88-iqki","roomId":"room-alpha","code":1006}
-{"level":40,"time":1793733186028,"version":"dev","event":"ws.rejected","reason":"protocol","playerId":"pilot-mw12fca3-2e85"}
-{"level":40,"time":1793733186028,"version":"dev","event":"ws.operation"}
-{"level":30,"time":1793733186029,"version":"dev","event":"player.left","playerId":"pilot-mw12fca3-2e85","code":1002}
-{"level":40,"time":1793733186030,"version":"dev","event":"ws.rejected","reason":"protocol","playerId":"pilot-mw12fca6-mku1"}
-{"level":40,"time":1793733186030,"version":"dev","event":"ws.operation"}
-{"level":30,"time":1793733186031,"version":"dev","event":"player.left","playerId":"pilot-mw12fca6-mku1","code":1002}
-{"level":40,"time":1793733186033,"version":"dev","event":"ws.operation"}
-{"level":40,"time":1793733186033,"version":"dev","event":"ws.rejected","reason":"protocol","playerId":"pilot-mw12fca8-ggtx"}
-{"level":30,"time":1793733186033,"version":"dev","event":"player.left","playerId":"pilot-mw12fca8-ggtx","code":1002}
-{"level":30,"time":1793733186036,"version":"dev","event":"player.left","playerId":"pilot-mw12fcab-apw0","code":1002}
-{"level":30,"time":1793733186102,"version":"dev","event":"room.created","roomId":"room-alpha"}
-{"level":30,"time":1793733186103,"version":"dev","event":"room.created","roomId":"room-nebula"}
-{"level":30,"time":1793733186104,"version":"dev","event":"room.created","roomId":"room-void"}
-{"level":30,"time":1793733186131,"version":"dev","event":"room.created","roomId":"room-alpha"}
-{"level":30,"time":1793733186132,"version":"dev","event":"room.created","roomId":"room-nebula"}
-{"level":30,"time":1793733186132,"version":"dev","event":"room.created","roomId":"room-void"}
-{"level":30,"time":1793733186133,"version":"dev","event":"room.created","roomId":"cap-3"}
-{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-4"}
-{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-5"}
-{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-6"}
-{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-7"}
-{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-8"}
-{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-9"}
-{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-10"}
-{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-11"}
-{"level":30,"time":1793733186136,"version":"dev","event":"room.created","roomId":"cap-12"}
-{"level":30,"time":1793733186136,"version":"dev","event":"room.created","roomId":"cap-13"}
-{"level":30,"time":1793733186136,"version":"dev","event":"room.created","roomId":"cap-14"}
-{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-15"}
-{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-16"}
-{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-17"}
-{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-18"}
-{"level":30,"time":1793733186138,"version":"dev","event":"room.created","roomId":"cap-19"}
-{"level":30,"time":1793733186138,"version":"dev","event":"room.created","roomId":"cap-20"}
-{"level":30,"time":1793733186138,"version":"dev","event":"room.created","roomId":"cap-21"}
-{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-22"}
-{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-23"}
-{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-24"}
-{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-25"}
-{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-26"}
-{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-27"}
-{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-28"}
-{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-29"}
-{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-30"}
-{"level":30,"time":1793733186141,"version":"dev","event":"room.created","roomId":"cap-31"}
-{"level":30,"time":1793733186143,"version":"dev","event":"server.draining","signal":"SIGTERM"}
-{"level":30,"time":1793733186177,"version":"dev","event":"server.stopped"}
-{"level":30,"time":1793733186178,"version":"dev","event":"room.created","roomId":"room-alpha"}
-{"level":30,"time":1793733186178,"version":"dev","event":"room.created","roomId":"room-nebula"}
-{"level":30,"time":1793733186179,"version":"dev","event":"room.created","roomId":"room-void"}
-{"level":30,"time":1793733186214,"version":"dev","event":"server.draining","signal":"SIGTERM"}
-{"level":30,"time":1793733186223,"version":"dev","event":"player.left","playerId":"pilot-mw12fcer-x76p","code":1001}
-{"level":30,"time":1793733186224,"version":"dev","event":"server.stopped"}
-{"level":30,"time":1793733186226,"version":"dev","event":"server.draining","signal":"SIGTERM"}
-{"level":30,"time":1793733186227,"version":"dev","event":"server.stopped"}
-{"level":40,"time":1793733187134,"version":"dev","event":"ws.rejected","reason":"heartbeat","playerId":"pilot-mw12fcwi-hqyi"}
-{"level":30,"time":1793733187134,"version":"dev","event":"player.left","playerId":"pilot-mw12fcwi-hqyi"}
-
- Test Files  12 passed (12)
-      Tests  106 passed (106)
-   Start at  21:13:04
-   Duration  4.34s (tests 64%, import 29%, transform 3%, worker 3%)
-
-    Isolate  12 workers spawned · ~192ms startup each (spawn + environment, per file)
-             at least ~269ms faster with isolate: false — reuses workers across files instead of one per file
-
- % Coverage report from v8
------------------|---------|----------|---------|---------|---------------------
-File             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s   
------------------|---------|----------|---------|---------|---------------------
-All files        |   92.63 |    77.66 |   91.91 |   93.63 |                     
- src/codec       |   92.51 |    75.57 |   88.88 |   93.05 |                     
-  binaryCodec.ts |   95.65 |    83.82 |     100 |   95.93 | ...,221,228,233,401 
-  codecs.ts      |     100 |       50 |     100 |     100 | 18                  
-  jsonCodec.ts   |      50 |    46.42 |      60 |   53.33 | 23-44               
- src/protocol    |    92.2 |    79.41 |    87.5 |   91.89 |                     
-  protocol.ts    |    92.2 |    79.41 |    87.5 |   91.89 | 212,260-268,497     
- src/sim         |   92.45 |    78.38 |    92.7 |   93.88 |                     
-  arena.ts       |   86.95 |    52.77 |     100 |    90.9 | 44,48               
-  asteroid.ts    |   88.88 |    73.33 |   85.71 |   88.46 | 62,101-102          
-  bullet.ts      |   93.54 |    68.75 |     100 |   96.66 | 107                 
-  collision.ts   |   98.19 |    85.54 |     100 |      99 | 193                 
-  components.ts  |   88.37 |    65.38 |     100 |   94.87 | 113-114             
-  entity.ts      |   95.23 |    83.87 |     100 |   95.23 | 35                  
-  pickup.ts      |     100 |     90.9 |     100 |     100 | 86-87               
-  prng.ts        |     100 |       60 |     100 |     100 | 8,22                
-  ship.ts        |   90.17 |    85.18 |   81.25 |    93.2 | 133-136,185,262-275 
-  world.ts       |   89.28 |    83.11 |   86.36 |   88.72 | ...,202,276,350-359 
------------------|---------|----------|---------|---------|---------------------
-
-=============================== Coverage summary ===============================
-Statements   : 92.63% ( 818/883 )
-Branches     : 77.66% ( 591/761 )
-Functions    : 91.91% ( 125/136 )
-Lines        : 93.63% ( 780/833 )
-================================================================================
+> dogfight@0.1.0 test:coverage
+
+> vitest run --coverage
+
+
+
+
+
+ RUN  v5.1.0 D:/uni/4th/js
+
+      Coverage enabled with v8
+
+
+
+{"level":30,"time":1793733185342,"version":"dev","event":"room.created","roomId":"room-alpha"}
+
+{"level":30,"time":1793733185341,"version":"dev","event":"room.created","roomId":"room-alpha"}
+
+{"level":30,"time":1793733185342,"version":"dev","event":"room.created","roomId":"room-nebula"}
+
+{"level":30,"time":1793733185342,"version":"dev","event":"room.created","roomId":"room-void"}
+
+{"level":30,"time":1793733185343,"version":"dev","event":"room.created","roomId":"room-nebula"}
+
+{"level":30,"time":1793733185343,"version":"dev","event":"room.created","roomId":"room-void"}
+
+{"level":30,"time":1793733185459,"version":"dev","event":"room.created","roomId":"room-1793733185458-261"}
+
+{"level":30,"time":1793733185550,"version":"dev","event":"player.left","playerId":"pilot-mw12fbwm-z9u1","code":1005}
+
+{"level":30,"time":1793733185554,"version":"dev","event":"player.joined","playerId":"pilot-mw12fbwt-hdmm","roomId":"room-alpha"}
+
+{"level":30,"time":1793733185619,"version":"dev","event":"player.joined","playerId":"pilot-mw12fbwu-xexh","roomId":"room-alpha"}
+
+{"level":30,"time":1793733185739,"version":"dev","event":"player.left","playerId":"pilot-mw12fbwu-xexh","code":1000}
+
+{"level":30,"time":1793733185804,"version":"dev","event":"player.left","playerId":"pilot-mw12fbwt-hdmm","roomId":"room-alpha","code":1005}
+
+{"level":40,"time":1793733185873,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc58-lscz"}
+
+{"level":30,"time":1793733185877,"version":"dev","event":"player.left","playerId":"pilot-mw12fc58-lscz","code":1008}
+
+{"level":40,"time":1793733185890,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc5z-5nrx"}
+
+{"level":30,"time":1793733185903,"version":"dev","event":"player.left","playerId":"pilot-mw12fc5z-5nrx","code":1008}
+
+{"level":40,"time":1793733185916,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc6q-6lmm"}
+
+{"level":30,"time":1793733185918,"version":"dev","event":"player.left","playerId":"pilot-mw12fc6q-6lmm","code":1008}
+
+{"level":30,"time":1793733185925,"version":"dev","event":"player.left","playerId":"pilot-mw12fc73-2nb1","code":1006}
+
+{"level":40,"time":1793733185933,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc79-wc2y"}
+
+{"level":30,"time":1793733185934,"version":"dev","event":"player.left","playerId":"pilot-mw12fc79-wc2y","code":1008}
+
+{"level":40,"time":1793733185943,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc7j-xpui"}
+
+{"level":30,"time":1793733185945,"version":"dev","event":"player.left","playerId":"pilot-mw12fc7j-xpui","code":1008}
+
+{"level":40,"time":1793733185954,"version":"dev","event":"ws.rejected","reason":"rate","playerId":"pilot-mw12fc7u-gn6p"}
+
+{"level":30,"time":1793733185955,"version":"dev","event":"player.left","playerId":"pilot-mw12fc7u-gn6p","code":1008}
+
+{"level":30,"time":1793733185960,"version":"dev","event":"player.left","playerId":"pilot-mw12fc84-i8mk","code":1006}
+
+{"level":30,"time":1793733185961,"version":"dev","event":"player.joined","playerId":"pilot-mw12fc88-iqki","roomId":"room-alpha"}
+
+{"level":30,"time":1793733186026,"version":"dev","event":"player.left","playerId":"pilot-mw12fc88-iqki","roomId":"room-alpha","code":1006}
+
+{"level":40,"time":1793733186028,"version":"dev","event":"ws.rejected","reason":"protocol","playerId":"pilot-mw12fca3-2e85"}
+
+{"level":40,"time":1793733186028,"version":"dev","event":"ws.operation"}
+
+{"level":30,"time":1793733186029,"version":"dev","event":"player.left","playerId":"pilot-mw12fca3-2e85","code":1002}
+
+{"level":40,"time":1793733186030,"version":"dev","event":"ws.rejected","reason":"protocol","playerId":"pilot-mw12fca6-mku1"}
+
+{"level":40,"time":1793733186030,"version":"dev","event":"ws.operation"}
+
+{"level":30,"time":1793733186031,"version":"dev","event":"player.left","playerId":"pilot-mw12fca6-mku1","code":1002}
+
+{"level":40,"time":1793733186033,"version":"dev","event":"ws.operation"}
+
+{"level":40,"time":1793733186033,"version":"dev","event":"ws.rejected","reason":"protocol","playerId":"pilot-mw12fca8-ggtx"}
+
+{"level":30,"time":1793733186033,"version":"dev","event":"player.left","playerId":"pilot-mw12fca8-ggtx","code":1002}
+
+{"level":30,"time":1793733186036,"version":"dev","event":"player.left","playerId":"pilot-mw12fcab-apw0","code":1002}
+
+{"level":30,"time":1793733186102,"version":"dev","event":"room.created","roomId":"room-alpha"}
+
+{"level":30,"time":1793733186103,"version":"dev","event":"room.created","roomId":"room-nebula"}
+
+{"level":30,"time":1793733186104,"version":"dev","event":"room.created","roomId":"room-void"}
+
+{"level":30,"time":1793733186131,"version":"dev","event":"room.created","roomId":"room-alpha"}
+
+{"level":30,"time":1793733186132,"version":"dev","event":"room.created","roomId":"room-nebula"}
+
+{"level":30,"time":1793733186132,"version":"dev","event":"room.created","roomId":"room-void"}
+
+{"level":30,"time":1793733186133,"version":"dev","event":"room.created","roomId":"cap-3"}
+
+{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-4"}
+
+{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-5"}
+
+{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-6"}
+
+{"level":30,"time":1793733186134,"version":"dev","event":"room.created","roomId":"cap-7"}
+
+{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-8"}
+
+{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-9"}
+
+{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-10"}
+
+{"level":30,"time":1793733186135,"version":"dev","event":"room.created","roomId":"cap-11"}
+
+{"level":30,"time":1793733186136,"version":"dev","event":"room.created","roomId":"cap-12"}
+
+{"level":30,"time":1793733186136,"version":"dev","event":"room.created","roomId":"cap-13"}
+
+{"level":30,"time":1793733186136,"version":"dev","event":"room.created","roomId":"cap-14"}
+
+{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-15"}
+
+{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-16"}
+
+{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-17"}
+
+{"level":30,"time":1793733186137,"version":"dev","event":"room.created","roomId":"cap-18"}
+
+{"level":30,"time":1793733186138,"version":"dev","event":"room.created","roomId":"cap-19"}
+
+{"level":30,"time":1793733186138,"version":"dev","event":"room.created","roomId":"cap-20"}
+
+{"level":30,"time":1793733186138,"version":"dev","event":"room.created","roomId":"cap-21"}
+
+{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-22"}
+
+{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-23"}
+
+{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-24"}
+
+{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-25"}
+
+{"level":30,"time":1793733186139,"version":"dev","event":"room.created","roomId":"cap-26"}
+
+{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-27"}
+
+{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-28"}
+
+{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-29"}
+
+{"level":30,"time":1793733186140,"version":"dev","event":"room.created","roomId":"cap-30"}
+
+{"level":30,"time":1793733186141,"version":"dev","event":"room.created","roomId":"cap-31"}
+
+{"level":30,"time":1793733186143,"version":"dev","event":"server.draining","signal":"SIGTERM"}
+
+{"level":30,"time":1793733186177,"version":"dev","event":"server.stopped"}
+
+{"level":30,"time":1793733186178,"version":"dev","event":"room.created","roomId":"room-alpha"}
+
+{"level":30,"time":1793733186178,"version":"dev","event":"room.created","roomId":"room-nebula"}
+
+{"level":30,"time":1793733186179,"version":"dev","event":"room.created","roomId":"room-void"}
+
+{"level":30,"time":1793733186214,"version":"dev","event":"server.draining","signal":"SIGTERM"}
+
+{"level":30,"time":1793733186223,"version":"dev","event":"player.left","playerId":"pilot-mw12fcer-x76p","code":1001}
+
+{"level":30,"time":1793733186224,"version":"dev","event":"server.stopped"}
+
+{"level":30,"time":1793733186226,"version":"dev","event":"server.draining","signal":"SIGTERM"}
+
+{"level":30,"time":1793733186227,"version":"dev","event":"server.stopped"}
+
+{"level":40,"time":1793733187134,"version":"dev","event":"ws.rejected","reason":"heartbeat","playerId":"pilot-mw12fcwi-hqyi"}
+
+{"level":30,"time":1793733187134,"version":"dev","event":"player.left","playerId":"pilot-mw12fcwi-hqyi"}
+
+
+
+ Test Files  12 passed (12)
+
+      Tests  106 passed (106)
+
+   Start at  21:13:04
+
+   Duration  4.34s (tests 64%, import 29%, transform 3%, worker 3%)
+
+
+
+    Isolate  12 workers spawned · ~192ms startup each (spawn + environment, per file)
+
+             at least ~269ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+
+ % Coverage report from v8
+
+-----------------|---------|----------|---------|---------|---------------------
+
+File             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+
+-----------------|---------|----------|---------|---------|---------------------
+
+All files        |   92.63 |    77.66 |   91.91 |   93.63 |
+
+ src/codec       |   92.51 |    75.57 |   88.88 |   93.05 |
+
+  binaryCodec.ts |   95.65 |    83.82 |     100 |   95.93 | ...,221,228,233,401
+
+  codecs.ts      |     100 |       50 |     100 |     100 | 18
+
+  jsonCodec.ts   |      50 |    46.42 |      60 |   53.33 | 23-44
+
+ src/protocol    |    92.2 |    79.41 |    87.5 |   91.89 |
+
+  protocol.ts    |    92.2 |    79.41 |    87.5 |   91.89 | 212,260-268,497
+
+ src/sim         |   92.45 |    78.38 |    92.7 |   93.88 |
+
+  arena.ts       |   86.95 |    52.77 |     100 |    90.9 | 44,48
+
+  asteroid.ts    |   88.88 |    73.33 |   85.71 |   88.46 | 62,101-102
+
+  bullet.ts      |   93.54 |    68.75 |     100 |   96.66 | 107
+
+  collision.ts   |   98.19 |    85.54 |     100 |      99 | 193
+
+  components.ts  |   88.37 |    65.38 |     100 |   94.87 | 113-114
+
+  entity.ts      |   95.23 |    83.87 |     100 |   95.23 | 35
+
+  pickup.ts      |     100 |     90.9 |     100 |     100 | 86-87
+
+  prng.ts        |     100 |       60 |     100 |     100 | 8,22
+
+  ship.ts        |   90.17 |    85.18 |   81.25 |    93.2 | 133-136,185,262-275
+
+  world.ts       |   89.28 |    83.11 |   86.36 |   88.72 | ...,202,276,350-359
+
+-----------------|---------|----------|---------|---------|---------------------
+
+
+
+=============================== Coverage summary ===============================
+
+Statements   : 92.63% ( 818/883 )
+
+Branches     : 77.66% ( 591/761 )
+
+Functions    : 91.91% ( 125/136 )
+
+Lines        : 93.63% ( 780/833 )
+
+================================================================================
