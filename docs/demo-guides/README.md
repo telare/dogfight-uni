@@ -1,5 +1,7 @@
 # Lab demo guides
 
+For a guided explanation of the code using React concepts, read the [teacher walkthrough](../teacher-walkthrough.md). It covers each lab's purpose, execution flow, code-reading order, demonstration and likely questions.
+
 Each guide presents the corresponding historical Git tag and includes PowerShell commands for checkout, dependency installation, development servers, opening the browser, terminal checks, and a teacher-facing demonstration script.
 
 | Lab | Guide | Development servers |
