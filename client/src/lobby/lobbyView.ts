@@ -242,6 +242,10 @@ export class LobbyView {
       this.#appendChatMessage(e)
     })
 
+    gameConnection.on('shutdown', (e) => this.#showError(e.message))
+    gameConnection.on('reconnectFailed', () =>
+      this.#showError('Connection lost. Select a sector to reconnect.'),
+    )
     gameConnection.on('error', (e) => {
       this.#appendChatMessage({
         from: 'ПОМИЛКА',
@@ -263,7 +267,7 @@ export class LobbyView {
     list.innerHTML = players
       .map(
         (p) =>
-          `<li class="roster-item"><span class="pilot-dot">●</span> ${p.name}</li>`,
+          `<li class="roster-item"><span class="pilot-dot">●</span> ${escapeHtml(p.name)}</li>`,
       )
       .join('')
   }
@@ -288,7 +292,7 @@ export class LobbyView {
       : isSystem
         ? 'chat-system'
         : 'chat-line'
-    el.innerHTML = `<strong>${from}:</strong> ${text}`
+    el.textContent = `${from}: ${text}`
 
     chatBox.appendChild(el)
     chatBox.scrollTop = chatBox.scrollHeight
@@ -438,14 +442,14 @@ export class LobbyView {
               : '#ef4444'
 
         return `
-        <div class="room-card ${isSelected ? 'selected' : ''}" data-room-id="${r.id}">
+        <div class="room-card ${isSelected ? 'selected' : ''}" data-room-id="${escapeHtml(r.id)}">
           <div class="room-header-row">
-            <h3 class="room-name">${r.name}</h3>
+            <h3 class="room-name">${escapeHtml(r.name)}</h3>
             <span class="room-ping">⚡ ${'—'} ms</span>
           </div>
           <div class="room-meta-row">
             <span class="room-players">👥 Пілоти: <strong>${r.players}/${r.maxPlayers}</strong></span>
-            <span class="room-difficulty" style="color: ${diffColor}">Складність: ${r.difficulty}</span>
+            <span class="room-difficulty" style="color: ${diffColor}">Складність: ${escapeHtml(r.difficulty)}</span>
           </div>
         </div>
       `
@@ -520,4 +524,14 @@ export class LobbyView {
       this.#container.classList.add('hidden')
     }
   }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[
+        char
+      ] ?? char,
+  )
 }

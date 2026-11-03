@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Dogfight metrics</title>
+<style>body{background:#070b18;color:#cde;font:16px monospace;max-width:1000px;margin:40px auto;padding:16px}pre{white-space:pre-wrap}a{color:#38bdf8}</style>
+<h1>Dogfight operations</h1><p>Refreshes every 2 seconds. Rates and event-loop utilization cover the time since the previous scrape; tick p99 uses each room's latest 60 ticks. Multiple scrapers share the rate window. For independent rates use Prometheus rate() over counters.</p>
+<p><a href="/health">Health/version</a> · <a href="/ready">Readiness</a> · <a href="/api/stats">Room details</a></p><pre id="metrics">Connecting…</pre>
+<script src="/dashboard.js"></script></html>

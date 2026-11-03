@@ -12,7 +12,7 @@ export default defineConfig({
   webServer: {
     command: 'node --import tsx server/src/index.ts',
     url: 'http://127.0.0.1:3107/health',
-    env: { PORT: '3107', HOST: '127.0.0.1' },
+    env: { PORT: '3107', HOST: '127.0.0.1', ALLOWED_ORIGINS: 'http://127.0.0.1:3107' },
     reuseExistingServer: false,
   },
 })

@@ -1,8 +1,11 @@
-import type { Server } from 'node:http'
+import type { IncomingMessage, Server } from 'node:http'
 import { WebSocket } from 'ws'
+import { isIP } from 'node:net'
 import type { RoomManager, Room } from './rooms.ts'
 import type { config as serverConfig } from './config.ts'
 import { assertNever } from 'shared'
+import { logger } from './logger.ts'
+import { metrics, reject, sendMeasured } from './metrics.ts'
 interface GameSocket extends WebSocket {
   isAlive: boolean
   playerId: string
@@ -68,17 +71,63 @@ export class TokenBucket {
  * @param {typeof import('./config.ts').config} context.config
  * @returns {WebSocketServer}
  */
+export function connectionIp(
+  req: IncomingMessage | undefined,
+  trusted: readonly string[] = [],
+): string {
+  const peer = (req?.socket.remoteAddress ?? 'unknown').replace(/^::ffff:/, '')
+  const forwarded = req?.headers['x-real-ip']
+  return trusted.includes(peer) &&
+    typeof forwarded === 'string' &&
+    isIP(forwarded)
+    ? forwarded
+    : peer
+}
+
 export function attachWebSocketServer(
   httpServer: Server,
   {
     roomManager,
     config,
-  }: { roomManager: RoomManager; config: typeof serverConfig },
+    isDraining = () => false,
+  }: {
+    roomManager: RoomManager
+    config: typeof serverConfig
+    isDraining?: () => boolean
+  },
 ) {
+  const connections = new Map<string, number>()
   const wss = new WebSocketServer<typeof WebSocket>({
     server: httpServer,
     path: '/ws',
     maxPayload: config.MAX_PAYLOAD_BYTES,
+    verifyClient: ({
+      req,
+      origin,
+    }: {
+      req: IncomingMessage
+      origin: string
+    }) => {
+      // Only explicitly configured peer addresses may supply the proxy-controlled X-Real-IP.
+      const ip = connectionIp(req, config.TRUSTED_PROXY_IPS)
+      if (isDraining()) {
+        reject('draining')
+        return false
+      }
+      if (
+        !(origin
+          ? config.ALLOWED_ORIGINS.includes(origin)
+          : config.ALLOW_MISSING_ORIGIN || config.NODE_ENV !== 'production')
+      ) {
+        reject('origin')
+        return false
+      }
+      if ((connections.get(ip) ?? 0) >= config.MAX_CONNECTIONS_PER_IP) {
+        reject('ip_limit')
+        return false
+      }
+      return true
+    },
   })
 
   // Періодичний пінг клієнтів (Heartbeat)
@@ -88,9 +137,8 @@ export function attachWebSocketServer(
       const ws = sessions.get(rawSocket)
       if (!ws) continue
       if (ws.isAlive === false) {
-        console.log(
-          `[WS] Клієнт ${ws.playerId || 'anonymous'} не відповів на pong — примусовий terminate()`,
-        )
+        logger.debug({ event: 'ws.operation' })
+        reject('heartbeat', ws.playerId)
         ws.terminate()
         continue
       }
@@ -104,7 +152,14 @@ export function attachWebSocketServer(
     clearInterval(heartbeatInterval)
   })
 
-  wss.on('connection', (rawSocket) => {
+  wss.on('connection', (rawSocket, req) => {
+    const ip = connectionIp(req, config.TRUSTED_PROXY_IPS)
+    connections.set(ip, (connections.get(ip) ?? 0) + 1)
+    rawSocket.once('close', () => {
+      const remaining = (connections.get(ip) ?? 1) - 1
+      if (remaining) connections.set(ip, remaining)
+      else connections.delete(ip)
+    })
     const state: Pick<
       GameSocket,
       | 'isAlive'
@@ -127,10 +182,9 @@ export function attachWebSocketServer(
 
     // КРИТИЧНЕ ПРАВИЛО NODE.JS: кожен сокет зобов'язаний мати обробник помилки 'error'
     socket.on('error', (err) => {
-      console.error(
-        `[WS Socket Error] ${socket.playerId}:`,
-        err instanceof Error ? err.message : String(err),
-      )
+      if ('code' in err && err.code === 'WS_ERR_UNSUPPORTED_MESSAGE_LENGTH')
+        reject('payload', socket.playerId)
+      logger.error({ event: 'ws.operation' })
     })
 
     socket.on('pong', () => {
@@ -140,9 +194,8 @@ export function attachWebSocketServer(
     // 1. Встановлюємо таймаут на приєднання (Join timeout)
     const joinTimer = setTimeout(() => {
       if (!socket.currentRoom) {
-        console.warn(
-          `[WS] ${socket.playerId} не надіслав 'join' протягом ${config.JOIN_TIMEOUT_MS}ms. Закриття з'єднання.`,
-        )
+        reject('join_timeout', socket.playerId)
+        logger.warn({ event: 'ws.operation' })
         socket.close(
           CloseCode.POLICY_VIOLATION,
           'Join message timeout exceeded',
@@ -154,6 +207,19 @@ export function attachWebSocketServer(
     // 2. Обробник вхідних повідомлень (Binary DataView або JSON)
     socket.on('message', (rawData, isBinary) => {
       if (socket.readyState !== WebSocket.OPEN) return
+      metrics.messagesIn++
+      metrics.bytesIn += Array.isArray(rawData)
+        ? rawData.reduce((sum, data) => sum + data.byteLength, 0)
+        : rawData.byteLength
+      if (isDraining()) {
+        socket.close(1001, 'Server restarting')
+        return
+      }
+      if (socket.bufferedAmount > config.BUFFERED_AMOUNT_THRESHOLD) {
+        reject('slow_client', socket.playerId)
+        socket.close(1008, 'Slow client')
+        return
+      }
       // 2.1 Перевірка та обробка бінарних повідомлень (DataView, Lab 05 M4)
       const isBin =
         isBinary ||
@@ -172,6 +238,7 @@ export function attachWebSocketServer(
               ? socket.inputRateLimiter
               : socket.rateLimiter
           if (!limiter.consume()) {
+            reject('rate', socket.playerId)
             socket.close(CloseCode.POLICY_VIOLATION, 'Rate limit exceeded')
             return
           }
@@ -185,14 +252,15 @@ export function attachWebSocketServer(
             const pongBuffer = encodePong(binMsg.clientTime, Date.now())
             if (socket.currentRoom) {
               socket.currentRoom.match.latencyInjector.deliver(() => {
-                if (socket.readyState === 1) socket.send(pongBuffer)
+                if (socket.readyState === 1) sendMeasured(socket, pongBuffer)
               })
             } else {
-              socket.send(pongBuffer)
+              sendMeasured(socket, pongBuffer)
             }
             return
           }
           if (binMsg.type === 'config') {
+            if (!config.ENABLE_DIAGNOSTICS) return
             if (socket.currentRoom) {
               socket.currentRoom.match.latencyInjector.updateConfig(binMsg)
               if (binMsg.codec) socket.currentRoom.match.codec = binMsg.codec
@@ -202,10 +270,8 @@ export function attachWebSocketServer(
           socket.close(CloseCode.PROTOCOL_ERROR, 'Expected a client message')
           return
         } catch (err) {
-          console.warn(
-            `[WS Binary Decode Error] ${socket.playerId}:`,
-            err instanceof Error ? err.message : String(err),
-          )
+          logger.warn({ event: 'ws.operation' })
+          reject('protocol', socket.playerId)
           socket.close(CloseCode.PROTOCOL_ERROR, 'Invalid binary frame')
           return
         }
@@ -213,9 +279,7 @@ export function attachWebSocketServer(
 
       // Перевірка Backpressure для повільних клієнтів (Slow-Client Policy)
       if (socket.bufferedAmount > config.BUFFERED_AMOUNT_THRESHOLD) {
-        console.warn(
-          `[WS Slow-Client] Буфер сокета ${socket.playerId} (${socket.bufferedAmount} bytes) перевищив поріг.`,
-        )
+        logger.warn({ event: 'ws.operation' })
       }
 
       // Валідація схеми повідомлення
@@ -224,9 +288,8 @@ export function attachWebSocketServer(
         config.MAX_PAYLOAD_BYTES,
       )
       if (!validation.valid) {
-        console.warn(
-          `[WS Protocol Error] Відхилено повідомлення від ${socket.playerId}: ${validation.reason}`,
-        )
+        reject('protocol', socket.playerId)
+        logger.warn({ event: 'ws.operation' })
         socket.close(
           validation.code || CloseCode.PROTOCOL_ERROR,
           'Invalid client message',
@@ -238,6 +301,7 @@ export function attachWebSocketServer(
       const limiter =
         msg.type === 'input' ? socket.inputRateLimiter : socket.rateLimiter
       if (!limiter.consume()) {
+        reject('rate', socket.playerId)
         socket.close(CloseCode.POLICY_VIOLATION, 'Rate limit exceeded')
         return
       }
@@ -246,50 +310,58 @@ export function attachWebSocketServer(
       if (msg.type === ClientMessageType.JOIN) {
         clearTimeout(joinTimer)
 
-        let targetRoom = roomManager.getRoom(msg.room)
-        if (!targetRoom) {
-          // Якщо кімнати немає в списку — створюємо динамічну
-          targetRoom = roomManager.createRoom({
-            id: msg.room,
-            name: `Sector ${msg.room}`,
-            persistent: false,
-          })
+        if (socket.currentRoom) {
+          socket.close(1008, 'Already joined')
+          return
         }
-
         try {
+          let targetRoom = roomManager.getRoom(msg.room)
+          if (!targetRoom) {
+            // Якщо кімнати немає в списку — створюємо динамічну
+            targetRoom = roomManager.createRoom({
+              id: msg.room,
+              name: `Sector ${msg.room}`,
+              persistent: false,
+            })
+          }
+
           targetRoom.join({
             id: socket.playerId,
             name: msg.name,
             socket,
           })
           socket.currentRoom = targetRoom
-          console.log(
-            `[WS] Гравець ${msg.name} (${socket.playerId}) приєднався до кімнати ${targetRoom.id}`,
-          )
+          logger.info({
+            event: 'player.joined',
+            playerId: socket.playerId,
+            roomId: targetRoom.id,
+          })
+          logger.debug({ event: 'ws.operation' })
         } catch (err) {
-          socket.send(
+          reject('capacity', socket.playerId)
+          sendMeasured(
+            socket,
             JSON.stringify({
               type: ServerMessageType.ERROR,
               message: err instanceof Error ? err.message : String(err),
             }),
           )
-          socket.close(
-            CloseCode.POLICY_VIOLATION,
-            err instanceof Error ? err.message : String(err),
-          )
+          socket.close(CloseCode.POLICY_VIOLATION, 'Room unavailable')
         }
       } else if (msg.type === ClientMessageType.INPUT) {
         if (socket.currentRoom) {
           socket.currentRoom.match.queueInput(socket.playerId, msg)
         }
       } else if (msg.type === ClientMessageType.CONFIG) {
+        if (!config.ENABLE_DIAGNOSTICS) return
         if (socket.currentRoom) {
           socket.currentRoom.match.latencyInjector.updateConfig(msg)
           if (msg.codec) socket.currentRoom.match.codec = msg.codec
         }
       } else if (msg.type === ClientMessageType.CHAT) {
         if (!socket.currentRoom) {
-          socket.send(
+          sendMeasured(
+            socket,
             JSON.stringify({
               type: ServerMessageType.ERROR,
               message: 'Cannot chat: Not joined to any room',
@@ -313,10 +385,10 @@ export function attachWebSocketServer(
         })
         if (socket.currentRoom) {
           socket.currentRoom.match.latencyInjector.deliver(() => {
-            if (socket.readyState === 1) socket.send(pong)
+            if (socket.readyState === 1) sendMeasured(socket, pong)
           })
         } else {
-          socket.send(pong)
+          sendMeasured(socket, pong)
         }
       } else {
         assertNever(msg)
@@ -326,10 +398,14 @@ export function attachWebSocketServer(
     // 3. Обробник закриття сокета
     socket.on('close', (code, reason) => {
       clearTimeout(joinTimer)
+      logger.info({
+        event: 'player.left',
+        playerId: socket.playerId,
+        roomId: socket.currentRoom?.id,
+        code,
+      })
       if (socket.currentRoom) {
-        console.log(
-          `[WS] ${socket.playerId} відключився від ${socket.currentRoom.id} (код: ${code}, причина: ${reason.toString() || 'none'})`,
-        )
+        logger.debug({ event: 'ws.operation' })
         socket.currentRoom.leave(socket.playerId)
         socket.currentRoom = null
       }

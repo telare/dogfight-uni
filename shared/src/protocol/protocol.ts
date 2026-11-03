@@ -113,20 +113,55 @@ export const ServerConfigSchema = z.object({
   HEARTBEAT_INTERVAL_MS: z.coerce.number().int().positive().default(15000),
   JOIN_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
   BUFFERED_AMOUNT_THRESHOLD: z.coerce.number().int().positive().default(65536),
-}) satisfies z.ZodType<ServerConfig>
 
-export type ServerConfig = {
-  PORT: number
-  HOST: string
-  NODE_ENV: 'development' | 'production' | 'test'
-  LOG_DIR: string
-  MAX_PAYLOAD_BYTES: number
-  RATE_LIMIT_PER_SEC: number
-  INPUT_RATE_LIMIT_PER_SEC: number
-  HEARTBEAT_INTERVAL_MS: number
-  JOIN_TIMEOUT_MS: number
-  BUFFERED_AMOUNT_THRESHOLD: number
-}
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+    .default('info'),
+  BUILD_SHA: z
+    .string()
+    .regex(/^[a-zA-Z0-9._-]{1,64}$/)
+    .default('dev'),
+  ALLOWED_ORIGINS: z
+    .string()
+    .default('http://localhost:3000,http://localhost:5173')
+    .transform((s) =>
+      s
+        .split(',')
+        .map((v) => z.url().parse(v.trim()))
+        .map((v) => {
+          const url = new URL(v)
+          if (!['http:', 'https:'].includes(url.protocol) || url.origin !== v)
+            throw new Error(
+              'Origins must be exact HTTP(S) origins without paths',
+            )
+          return v
+        }),
+    ),
+  TRUSTED_PROXY_IPS: z
+    .string()
+    .default('')
+    .transform((s) =>
+      s
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .map((v) => z.union([z.ipv4(), z.ipv6()]).parse(v)),
+    ),
+  ALLOW_MISSING_ORIGIN: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((s) => s === 'true'),
+  ENABLE_DIAGNOSTICS: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((s) => (s === undefined ? undefined : s === 'true')),
+  MAX_CONNECTIONS_PER_IP: z.coerce.number().int().positive().default(16),
+  MAX_ROOMS: z.coerce.number().int().min(3).default(32),
+  MAX_PLAYERS_PER_ROOM: z.coerce.number().int().positive().max(128).default(32),
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(100).max(9000).default(5000),
+})
+
+export type ServerConfig = z.infer<typeof ServerConfigSchema>
 
 // ── Result-тип для parseClientMessage ─────────────────────────────────────
 
@@ -263,6 +298,7 @@ export const ClientMessageType = {
 
 // Const assertion preserves server message discriminants for exhaustive dispatch.
 export const ServerMessageType = {
+  SHUTDOWN: 'shutdown',
   WELCOME: 'welcome',
   ROSTER: 'roster',
   SNAPSHOT: 'snapshot',
@@ -391,6 +427,7 @@ export const RoomSchema = z.object({
 })
 export type RoomData = z.infer<typeof RoomSchema>
 export const ServerMessageSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('shutdown'), message: z.string().max(200) }),
   z.object({
     type: z.literal('welcome'),
     playerId: z.string(),
@@ -463,5 +500,5 @@ export const CreateRoomSchema = z.object({
   name: z.string().trim().min(1).max(32),
   difficulty: z.string().default('Normal'),
   arena: z.string().default('standard'),
-  maxPlayers: z.coerce.number().int().min(1).max(32).default(8),
+  maxPlayers: z.coerce.number().int().min(1).max(128).default(8),
 })

@@ -1,3 +1,4 @@
+import { logger } from '../logger.ts'
 import type { TransformCallback, TransformOptions } from 'node:stream'
 /**
  * Dogfight Server — Стрімінг логів матчів на диск (Lab 04 M3)
@@ -51,13 +52,14 @@ export class MatchLog {
   writeStream: fs.WriteStream
   isClosed: boolean
   eventsCount: number
+  private failure: Error | undefined
 
   /**
    * @param {string} roomId
    */
   constructor(roomId: string) {
     this.roomId = roomId
-    this.filename = `${roomId}-${Date.now()}.ndjson`
+    this.filename = `${encodeURIComponent(roomId)}-${Date.now()}.ndjson`
     this.filepath = path.join(config.LOG_DIR, this.filename)
 
     this.transform = new NdjsonTransform()
@@ -68,12 +70,10 @@ export class MatchLog {
 
     // Запуск стрімінгового конвеєра (pipeline)
     this.pipelinePromise = pipeline(this.transform, this.writeStream).catch(
-      (err) => {
+      (err: unknown) => {
+        this.failure = err instanceof Error ? err : new Error(String(err))
         if (!this.isClosed) {
-          console.error(
-            `[MatchLog] Помилка конвеєра запису логу ${this.roomId}:`,
-            err,
-          )
+          logger.error({ event: 'log.matchlog.operation', err: err })
         }
       },
     )
@@ -111,9 +111,7 @@ export class MatchLog {
    * @returns {Promise<void>}
    */
   async close() {
-    if (this.isClosed) return
-    this.isClosed = true
-
+    if (this.isClosed) return this.pipelinePromise
     this.record({
       t: Date.now(),
       type: 'room:close',
@@ -121,7 +119,9 @@ export class MatchLog {
       totalEvents: this.eventsCount,
     })
 
+    this.isClosed = true
     this.transform.end()
     await this.pipelinePromise
+    if (this.failure) throw this.failure
   }
 }

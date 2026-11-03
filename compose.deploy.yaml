@@ -1,0 +1,48 @@
+services:
+  game:
+    image: ${IMAGE:?Set IMAGE to a registry digest}
+    environment:
+      NODE_ENV: production
+      ALLOWED_ORIGINS: https://${DOMAIN:?Set DOMAIN}
+      MAX_CONNECTIONS_PER_IP: '16'
+      TRUSTED_PROXY_IPS: '172.30.8.2'
+      MAX_ROOMS: '32'
+      MAX_PLAYERS_PER_ROOM: '32'
+      LOG_LEVEL: info
+      ENABLE_DIAGNOSTICS: 'false'
+      ALLOW_MISSING_ORIGIN: 'false'
+    networks:
+      game_net:
+        ipv4_address: 172.30.8.3
+    restart: unless-stopped
+    stop_grace_period: 10s
+    mem_limit: 256m
+    cpus: 1.0
+    read_only: true
+    tmpfs:
+      - /app/logs:uid=1000,gid=1000,mode=0700,size=32m
+      - /tmp
+  proxy:
+    image: caddy:2-alpine
+    networks:
+      game_net:
+        ipv4_address: 172.30.8.2
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  game_net:
+    ipam:
+      config:
+        - subnet: 172.30.8.0/24

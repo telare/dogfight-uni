@@ -1,3 +1,6 @@
+import { logger } from './logger.ts'
+import { sendMeasured, reject } from './metrics.ts'
+import { config } from './config.ts'
 import {
   asSeq,
   encodeSnapshot,
@@ -38,6 +41,11 @@ export class Match {
       throw new RangeError(
         'Bot count must be 1–128, with at most 128 bots per match',
       )
+    if (
+      this.room &&
+      this.playerShips.size + count > config.MAX_PLAYERS_PER_ROOM
+    )
+      throw new RangeError('Room capacity exceeded')
     for (let i = 0; i < count; i++) {
       const id = `bot-${this.nextBotId++}`
       this.addPlayer({ id, name: id })
@@ -266,6 +274,11 @@ export class Match {
       const ws = playerData.socket
       if (!ws || ws.readyState !== 1) continue // 1 = OPEN
 
+      if (ws.bufferedAmount > config.BUFFERED_AMOUNT_THRESHOLD) {
+        reject('slow_client', playerId)
+        ws.close(1008, 'Slow client')
+        continue
+      }
       const ackSeq = this.lastProcessedSeq.get(playerId) || 0
       const snapshot = { ...rawSnapshot, ackSeq: asSeq(ackSeq) }
 
@@ -278,12 +291,9 @@ export class Match {
       this.latencyInjector.deliver(() => {
         if (ws.readyState === 1) {
           try {
-            ws.send(payload, { binary: codec === 'binary' })
+            sendMeasured(ws, payload, { binary: codec === 'binary' })
           } catch (err) {
-            console.error(
-              `[Match snapshot send error ${playerId}]:`,
-              err instanceof Error ? err.message : String(err),
-            )
+            logger.error({ event: 'match.operation' })
           }
         }
       })

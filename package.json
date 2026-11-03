@@ -12,8 +12,8 @@
     "dev": "npm run dev --workspace=client",
     "dev:client": "npm run dev --workspace=client",
     "dev:server": "npm run dev --workspace=server",
-    "start": "npm run start --workspace=server",
-    "build": "npm run build --workspace=client",
+    "start": "node server/dist/index.js",
+    "build": "npm run build --workspace=shared && npm run build --workspace=server && npm run build --workspace=client",
     "preview": "npm run preview --workspace=client",
     "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces --if-present",
@@ -21,10 +21,12 @@
     "format": "prettier --write client/src server/src shared/src client/index.html",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "bench:load": "node --import tsx scripts/load-test.js",
-    "bench:sim": "node --import tsx scripts/profile-simulation.js",
-    "bench:browser": "node --import tsx scripts/profile-browser.js",
-    "bench:suite": "node --import tsx scripts/measure-lab07.js"
+    "bench:load": "node --conditions=development --import tsx scripts/load-test.js",
+    "bench:sim": "node --conditions=development --import tsx scripts/profile-simulation.js",
+    "bench:browser": "node --conditions=development --import tsx scripts/profile-browser.js",
+    "bench:suite": "node --conditions=development --import tsx scripts/measure-lab07.js",
+    "test:production": "node scripts/production-smoke.js",
+    "bench:staging": "node scripts/staging-load.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",

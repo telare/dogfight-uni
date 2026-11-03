@@ -1,0 +1,23 @@
+services:
+  game:
+    build:
+      context: .
+      args:
+        BUILD_SHA: ${BUILD_SHA:-local}
+    ports:
+      - '3000:3000'
+    environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      MAX_CONNECTIONS_PER_IP: ${MAX_CONNECTIONS_PER_IP:-16}
+      MAX_PLAYERS_PER_ROOM: ${MAX_PLAYERS_PER_ROOM:-32}
+      ENABLE_DIAGNOSTICS: ${ENABLE_DIAGNOSTICS:-false}
+      ALLOW_MISSING_ORIGIN: 'false'
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    restart: unless-stopped
+    stop_grace_period: 10s
+    mem_limit: 256m
+    cpus: 1.0
+    read_only: true
+    tmpfs:
+      - /app/logs:uid=1000,gid=1000,mode=0700,size=32m
+      - /tmp

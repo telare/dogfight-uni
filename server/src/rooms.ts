@@ -1,3 +1,4 @@
+import { sendMeasured } from './metrics.ts'
 import type { WebSocket } from 'ws'
 import { type ServerMessage, type EntityId } from 'shared'
 export interface Player {
@@ -31,6 +32,8 @@ import { EventEmitter } from 'node:events'
 import { ServerMessageType } from './protocol.ts'
 import { MatchLog } from './log/matchlog.ts'
 import { Match } from './match.ts'
+import { config } from './config.ts'
+import { logger } from './logger.ts'
 
 export class Room extends EventEmitter<RoomEvents> {
   id: string
@@ -67,7 +70,7 @@ export class Room extends EventEmitter<RoomEvents> {
     this.name = name
     this.difficulty = difficulty
     this.arena = arena
-    this.maxPlayers = maxPlayers
+    this.maxPlayers = Math.min(maxPlayers, config.MAX_PLAYERS_PER_ROOM)
     this.persistent = persistent
     this.createdAt = Date.now()
 
@@ -84,7 +87,7 @@ export class Room extends EventEmitter<RoomEvents> {
 
     // Запобігаємо падінню процесу при необроблених error-подіях EventEmitter
     this.on('error', (err) => {
-      console.error(`[Room ${this.id}] Помилка EventEmitter:`, err)
+      logger.error({ event: 'rooms.operation', err: err })
     })
   }
 
@@ -93,7 +96,10 @@ export class Room extends EventEmitter<RoomEvents> {
   }
 
   get isFull() {
-    return this.players.size >= this.maxPlayers
+    return (
+      this.players.size >= this.maxPlayers ||
+      this.players.size + this.match.bots.size >= config.MAX_PLAYERS_PER_ROOM
+    )
   }
 
   /**
@@ -113,6 +119,7 @@ export class Room extends EventEmitter<RoomEvents> {
    * @param {{ id: string, name: string, socket: import('ws').WebSocket }} player
    */
   join(player: Player) {
+    if (this.players.has(player.id)) throw new Error('Already joined')
     if (this.isFull) {
       throw new Error(`Кімната ${this.name} заповнена`)
     }
@@ -252,7 +259,7 @@ export class Room extends EventEmitter<RoomEvents> {
   sendRaw(socket: WebSocket, payload: string) {
     if (socket && socket.readyState === 1) {
       // readyState 1 === OPEN
-      socket.send(payload)
+      sendMeasured(socket, payload)
     }
   }
 
@@ -338,7 +345,10 @@ export class RoomManager {
   createRoom(options: Omit<RoomOptions, 'id'> & { id?: string }) {
     const id =
       options.id || `room-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+    if (this.#rooms.has(id)) throw new Error('Room already exists')
+    if (this.count >= config.MAX_ROOMS) throw new Error('Room limit reached')
     const room = new Room({ ...options, id })
+    logger.info({ event: 'room.created', roomId: id })
 
     this.#rooms.set(id, room)
 
@@ -363,7 +373,11 @@ export class RoomManager {
   deleteRoom(id: string) {
     const room = this.#rooms.get(id)
     if (room) {
-      room.destroy().catch((error: unknown) => console.error(error))
+      room
+        .destroy()
+        .catch((error: unknown) =>
+          logger.error({ event: 'rooms.operation', err: error }),
+        )
       this.#rooms.delete(id)
       return true
     }

@@ -16,6 +16,7 @@ const parsedEnv = parseServerConfig(process.env)
 
 export const config = {
   ...parsedEnv,
+  ENABLE_DIAGNOSTICS: parsedEnv.ENABLE_DIAGNOSTICS ?? parsedEnv.NODE_ENV !== 'production',
   LOG_DIR: path.resolve(rootDir, parsedEnv.LOG_DIR || 'logs'),
   CLIENT_DIST_DIR: path.resolve(rootDir, 'client', 'dist'),
 }

@@ -1,3 +1,4 @@
+import { logger } from './logger.ts'
 /**
  * Latency Injector (Lab 05 M1 & M3)
  * Штучне внесення мережевої затримки (latency), джиттеру (jitter)
@@ -61,14 +62,14 @@ export class LatencyInjector {
       try {
         deliverFn()
       } catch (err) {
-        console.error('[LatencyInjector immediate error]:', err)
+        logger.error({ event: 'latency.operation', err: err })
       }
     } else {
       setTimeout(() => {
         try {
           deliverFn()
         } catch (err) {
-          console.error('[LatencyInjector delayed error]:', err)
+          logger.error({ event: 'latency.operation', err: err })
         }
       }, delay)
     }

@@ -123,7 +123,6 @@ export class GameConnection extends Bus<GameEvents> {
           `[WS] З'єднання встановлено з ${this.wsUrl} (binaryType: arraybuffer)`,
         )
         this.status = 'connected'
-        this.#reconnectAttempts = 0
 
         this.#startPingAndBandwidthTimers()
 
@@ -194,6 +193,9 @@ export class GameConnection extends Bus<GameEvents> {
       socket.onclose = (event) => {
         if (this.#ws !== socket) return
         console.log(`[WS Closed] Код: ${event.code}, причина: ${event.reason}`)
+        this.playerId = null
+        this.shipId = null
+        this.roster = []
         this.status = 'disconnected'
         this.#stopTimers()
         this.emit('status', { status: this.status })
@@ -350,6 +352,9 @@ export class GameConnection extends Bus<GameEvents> {
 
     // Диспетчеризуємо CustomEvent
     switch (msg.type) {
+      case 'shutdown':
+        this.emit('shutdown', msg)
+        break
       case 'welcome':
         this.emit('welcome', msg)
         break
@@ -376,6 +381,7 @@ export class GameConnection extends Bus<GameEvents> {
     }
 
     if (msg.type === 'welcome') {
+      this.#reconnectAttempts = 0
       this.playerId = msg.playerId
       this.shipId = msg.shipId
       this.roster = msg.roster || []

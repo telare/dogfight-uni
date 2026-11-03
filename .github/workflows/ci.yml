@@ -16,6 +16,7 @@ jobs:
       - run: npm run lint
       - run: npm run test:coverage
       - run: npm run build
+      - run: npm run test:production
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
@@ -23,3 +24,74 @@ jobs:
         with:
           name: playwright-results
           path: test-results/
+      - run: docker build --build-arg BUILD_SHA=${{ github.sha }} -t dogfight:ci .
+      - run: node scripts/container-smoke.js dogfight:ci
+      - if: startsWith(github.ref, 'refs/tags/v')
+        run: docker save dogfight:ci -o dogfight-image.tar
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: tested-production-image
+          path: dogfight-image.tar
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.push.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          name: tested-production-image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: push
+        env:
+          IMAGE_NAME: ${{ steps.image.outputs.name }}
+        run: |
+          docker load -i dogfight-image.tar
+          docker tag dogfight:ci "$IMAGE_NAME:$GITHUB_SHA"
+          docker push "$IMAGE_NAME:$GITHUB_SHA"
+          echo "image=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_NAME:$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy immutable image to the configured Docker host
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          IMAGE: ${{ needs.publish.outputs.image }}
+        run: |
+          test -n "$DEPLOY_HOST" && test -n "$DEPLOY_USER"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          scp compose.deploy.yaml Caddyfile "$DEPLOY_USER@$DEPLOY_HOST:/opt/dogfight/"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "cd /opt/dogfight && ./deploy.sh '$IMAGE'"
+      - name: Check public version and WSS
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          npm ci --omit=dev
+          node scripts/public-smoke.js

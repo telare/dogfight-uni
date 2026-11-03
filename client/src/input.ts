@@ -32,6 +32,37 @@ const GAME_KEYS = new Set([
 export function createInput(target: Window) {
   const down = new Set()
   const pressed = new Set()
+  const touchDown = new Set<string>()
+  const touchControls = document.createElement('div')
+  touchControls.className = 'touch-controls'
+  for (const [code, label] of [
+    ['ArrowLeft', '↶'],
+    ['ArrowUp', 'Thrust'],
+    ['ArrowRight', '↷'],
+    ['Space', 'Fire'],
+    ['Escape', 'Lobby'],
+  ]) {
+    if (!code || !label) continue
+    const button = document.createElement('button')
+    button.textContent = label
+    button.type = 'button'
+    button.setAttribute('aria-label', label)
+    button.addEventListener('pointerdown', (event) => {
+      event.preventDefault()
+      button.setPointerCapture(event.pointerId)
+      touchDown.add(code)
+      pressed.add(code)
+    })
+    const release = () => {
+      touchDown.delete(code)
+      pressed.delete(code)
+    }
+    button.addEventListener('pointerup', release)
+    button.addEventListener('pointercancel', release)
+    button.addEventListener('lostpointercapture', release)
+    touchControls.append(button)
+  }
+  document.body.append(touchControls)
 
   function onKeyDown(e: KeyboardEvent) {
     if (
@@ -61,6 +92,7 @@ export function createInput(target: Window) {
   function onBlur() {
     down.clear()
     pressed.clear()
+    touchDown.clear()
   }
 
   target.addEventListener('keydown', onKeyDown)
@@ -68,12 +100,14 @@ export function createInput(target: Window) {
   target.addEventListener('blur', onBlur)
 
   return {
-    isDown: (code: string) => down.has(code),
+    isDown: (code: string) => down.has(code) || touchDown.has(code),
     justPressed: (code: string) => pressed.has(code),
     consume() {
       pressed.clear()
     },
     destroy() {
+      touchControls.remove()
+      touchDown.clear()
       target.removeEventListener('keydown', onKeyDown)
       target.removeEventListener('keyup', onKeyUp)
       target.removeEventListener('blur', onBlur)

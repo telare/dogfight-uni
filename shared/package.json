@@ -3,14 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./sim": "./src/sim/index.ts",
-    "./protocol": "./src/protocol/index.ts",
-    "./codec": "./src/codec/index.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./sim": {
+      "types": "./src/sim/index.ts",
+      "development": "./src/sim/index.ts",
+      "default": "./dist/sim/index.js"
+    },
+    "./protocol": {
+      "types": "./src/protocol/index.ts",
+      "development": "./src/protocol/index.ts",
+      "default": "./dist/protocol/index.js"
+    },
+    "./codec": {
+      "types": "./src/codec/index.ts",
+      "development": "./src/codec/index.ts",
+      "default": "./dist/codec/index.js"
+    }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }

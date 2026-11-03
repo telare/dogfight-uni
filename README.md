@@ -1,12 +1,48 @@
 [![Lab checks](https://github.com/telare/dogfight-uni/actions/workflows/ci.yml/badge.svg)](https://github.com/telare/dogfight-uni/actions/workflows/ci.yml)
 
-# Dogfight — a guide for React developers
+# Dogfight
 
-Dogfight is a browser space game built across seven JavaScript university labs. You steer a ship, shoot, dodge asteroids, collect pickups, and share an arena with other players. The current version uses **TypeScript, Canvas 2D, Vite, Node.js, WebSockets, and Zod**.
+Fly a spaceship, dodge asteroids, collect pickups and fight other pilots in a shared browser arena. No account needed: choose a pilot name and a sector, then launch.
 
-If you know React, the familiar parts are forms, asynchronous loading, UI state, and subscriptions. The new part is a simulation that advances continuously. The browser predicts movement for immediate feedback; the server runs the authoritative match and sends state back to each player. The current UI uses vanilla DOM and Canvas; React is a useful reference for understanding its architecture.
+![Two pilots fighting](docs/dogfight-two-players.gif)
 
-![Two players fighting with artificial network latency](docs/dogfight-two-players.gif)
+**Public launch:** pending hosting configuration. The production build and deployment pipeline are implemented; a public URL, two remote players' RTT, phone installation, external monitor and final demo video are still awaiting real verification. See the [Lab 08 report](docs/lab-08.report.md) and [deployment guide](docs/deployment.md).
+
+```sh
+npm ci
+npm run build
+npm start
+```
+
+Open **http://localhost:3000** in two windows and join the same sector. Use **W/?** to thrust, **A/D or ?/?** to turn, **Space** to fire, **Escape** for the lobby and **N** for Netgraph. Touch devices have thrust, turn, fire and lobby buttons. Install through your browser's app menu on HTTPS; offline navigation explains how to reconnect.
+
+TypeScript ? Canvas 2D ? Node.js ? WebSockets ? Zod. The server owns each 30 Hz match; the client predicts local movement and interpolates remote ships. One process serves the built UI and `/ws` from one origin. HTTPS pages automatically use WSS.
+
+```mermaid
+flowchart LR
+  Browser[Canvas client: input, prediction, interpolation] <-->|WSS: input / snapshots| Node[Node: rooms, authoritative 30 Hz matches]
+  Browser --> Shared[Shared simulation, schemas, binary codecs]
+  Node --> Shared
+  Node --> Operations[JSON stdout logs, health, readiness, metrics]
+```
+
+| Measurement | Result | Context |
+| --- | ---: | --- |
+| JSON / binary snapshot | 1496 / 304 bytes | Historical Lab 05 fixture, 4.92? smaller |
+| GC total before / after | 73.027 / 46.979 ms | Lab 07's 30-second instrumented browser run |
+| Major GC before / after | 39 / 20 | Collections remain; no GC-free claim |
+| Frame interval p99 | 16.8 ms | Headless Chromium, approximately 60 Hz |
+| Lab 07 capacity | ?128 clients | Local Windows loopback, saturation not reached |
+| Lab 08 container capacity | 64 pass / 128 exceed tick budget | Linux, 1 CPU / 256 MB; separate load process |
+| Real remote RTT | Pending | Requires two players on other networks |
+
+Raw historical measurements and methodological limits are in the [Lab 07 report](docs/lab-07.report.md), [codec report](docs/lab-reports.md#3-??????-??-??????????-??????????-json-vs-binary-dataview) and [production evidence](docs/production/).
+
+**Current limits:** one instance keeps room state in memory, so matches do not survive restarts. The client returns to the lobby and reconnects with backoff. Remote ships render about 66 ms behind arriving snapshots for smoothness; lag compensation is absent. The client also runs a local world, so shared rules alone do not guarantee complete live-world synchronization. Capacity measurements are local bounds, not a public-host guarantee. Public diagnostics and artificial latency controls are disabled by default.
+
+**What I'd do next:** explicit room ownership with sticky routing or Redis, server lag compensation, matchmaking, accounts, and profiling on the actual deployment host with remote users.
+
+The guide below explains the implementation for React developers and preserves the earlier lab documentation.
 
 ## Contents
 
@@ -54,7 +90,7 @@ npm run build
 npm start
 ```
 
-Open **http://localhost:3000**. The build produces `client/dist`; Node serves it alongside the API and socket endpoint. `npm start` runs server TypeScript through `tsx` and needs installed dependencies. `npm run preview` previews the client build; use `npm start` for the combined app.
+Open **http://localhost:3000**. The build produces `client/dist`; Node serves it alongside the API and socket endpoint. `npm start` runs compiled server JavaScript and shared runtime exports; production needs only `npm ci --omit=dev`. `npm run preview` previews the client build; use `npm start` for the combined app.
 
 ## Play and inspect it
 
@@ -245,7 +281,7 @@ TypeScript helps while writing code, but received JSON is runtime data. [protoco
 
 Messages use a discriminated `type` field. After parsing, switching on `type` narrows the payload; `assertNever()` helps catch unhandled variants. Branded numbers such as `EntityId`, `Tick`, and `Seq` distinguish concepts otherwise represented as `number`; constructors validate ranges. Readonly snapshot types constrain accidental mutation by consumers.
 
-All packages inherit strict settings from [tsconfig.base.json](tsconfig.base.json), including `noUncheckedIndexedAccess`. Vite builds browser code; `tsx` executes server TypeScript. Run typechecking separately because a Vite build does not replace it.
+All packages inherit strict settings from [tsconfig.base.json](tsconfig.base.json), including `noUncheckedIndexedAccess`. Vite builds browser code; `tsx` executes server TypeScript in development, while production runs emitted JavaScript. Run typechecking separately because a Vite build does not replace it.
 
 ### Two wire formats, one model
 
@@ -267,7 +303,7 @@ HTTP handles discrete requests; WebSockets carry ongoing match traffic.
 | `GET /api/slow?ms=300` | Demonstrate blocking the Node event loop |
 | `/ws` | WebSocket: join/leave, roster, chat, input, snapshots, ping/pong, configuration |
 
-Open `/health` on port 3000 during development: Vite proxies `/api` and `/ws`. The slow endpoint blocks the shared Node thread, pausing other requests and match ticks during the experiment.
+Production also exposes `/ready`, `/metrics` and a private dashboard; development controls require `ENABLE_DIAGNOSTICS`. Open `/health` on port 3000 during development: Vite proxies `/api` and `/ws`. The slow endpoint blocks the shared Node thread, pausing other requests and match ticks during the experiment.
 
 Room events are streamed to `logs/*.ndjson` through a transform and file pipeline. The replay endpoint streams records back; it does not reconstruct a playable match from complete recorded inputs. Graceful shutdown closes rooms, sockets, and logs.
 
@@ -365,6 +401,8 @@ git show lab-03:README.md
 | [lab-04](https://github.com/telare/dogfight-uni/tree/lab-04) | Node server, rooms, WebSockets, streams |
 | [lab-05](https://github.com/telare/dogfight-uni/tree/lab-05) | Authoritative match, prediction, reconciliation, interpolation, binary protocol |
 | [lab-06](https://github.com/telare/dogfight-uni/tree/lab-06) | Strict TypeScript, shared contracts, runtime validation |
+| [lab-07](https://github.com/telare/dogfight-uni/tree/lab-07) | Tests, profiling, measured optimizations and load testing |
+| lab-08 / v1.0.0 (pending public release) | Production runtime, hardening, Docker, CI/CD and PWA |
 
 Original Ukrainian Lab 06 and Lab 05 reports, historical measurements, and submission checklists are preserved in [docs/lab-reports.md](docs/lab-reports.md). See [lab-06.md](lab-06.md) for the assignment and [lab-06.notes.md](lab-06.notes.md) for theory.
 

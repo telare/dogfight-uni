@@ -1,0 +1,9 @@
+{$DOMAIN} {
+  encode gzip
+  # Keep operational room metadata behind the private network in public deployments.
+  @internal path /metrics /api/stats /dashboard.html /dashboard.js
+  respond @internal 404
+  reverse_proxy game:3000 {
+    header_up X-Real-IP {remote_host}
+  }
+}

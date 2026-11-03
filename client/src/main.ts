@@ -479,4 +479,28 @@ async function startApplication() {
   }
 }
 
+gameConnection.on('status', ({ status }) => {
+  if (status === 'disconnected' && gameState === 'playing') {
+    gameState = 'lobby'
+    lobbyView?.show()
+  }
+})
+gameConnection.on('shutdown', () => {
+  gameState = 'lobby'
+  lobbyView?.show()
+})
+const versionLabel = document.createElement('small')
+versionLabel.id = 'build-version'
+versionLabel.style.cssText =
+  'position:fixed;bottom:4px;right:8px;color:#aaa;z-index:1000'
+document.body.append(versionLabel)
+fetch('/health')
+  .then((r) => r.json())
+  .then((data: { version?: string }) => {
+    versionLabel.textContent = `build ${data.version ?? 'dev'}`
+  })
+  .catch(() => {})
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  navigator.serviceWorker.register('/sw.js').catch(console.error)
+}
 startApplication().catch(console.error)

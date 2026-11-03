@@ -1,0 +1,1574 @@
+{
+  "base": "http://127.0.0.1:3108",
+  "origin": "http://localhost:3000",
+  "count": 8,
+  "seconds": 10,
+  "version": "lab08-local",
+  "snapshots": 2968,
+  "healthyClosed": 0,
+  "ticks": [
+    5.151341999997385,
+    4.518111999990651,
+    4.518111999990651,
+    3.4001599999901373,
+    3.4001599999901373,
+    3.4055930000031367,
+    3.4055930000031367,
+    3.4335949999804143,
+    3.4335949999804143,
+    3.1383780000032857,
+    3.2136830000090413,
+    3.2136830000090413
+  ],
+  "healthy": true,
+  "samples": [
+    {
+      "phase": "before",
+      "at": 1793732328494,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 132,
+        "roomsCount": 4,
+        "rssMb": "79.91",
+        "heapUsedMb": "15.18",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 3972,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.057,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.48302300000796095,
+              "botsCount": 0,
+              "avgJitterMs": 0.728,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 3972,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.032,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.18350899999495596,
+              "botsCount": 0,
+              "avgJitterMs": 0.65,
+              "maxJitterMs": 2.459,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 3972,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.026,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.11760500000673346,
+              "botsCount": 0,
+              "avgJitterMs": 0.466,
+              "maxJitterMs": 2.043,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 64,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 1.1,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 5.151341999997385,
+              "botsCount": 0,
+              "avgJitterMs": 0.8,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 48,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 508
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 131174.854212,
+          "active": 1246.1994019999693,
+          "utilization": 0.009410885716349694
+        },
+        "timestamp": 1793732328493
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 83795968\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.00941975580487392\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 4.832014403811412\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 4.1072122432397\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 327.731376938509\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 4075.4190984671222\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 640\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 544\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 43408\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 539789\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 0\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.48302300000796095\ndogfight_tick_p99_ms{slot=\"1\"} 0.18350899999495596\ndogfight_tick_p99_ms{slot=\"2\"} 0.11760500000673346\ndogfight_tick_p99_ms{slot=\"3\"} 5.151341999997385\n"
+    },
+    {
+      "phase": "during",
+      "at": 1793732328528,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 132,
+        "roomsCount": 4,
+        "rssMb": "79.91",
+        "heapUsedMb": "15.06",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 3973,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.055,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.48302300000796095,
+              "botsCount": 0,
+              "avgJitterMs": 0.735,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 3973,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.031,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.18350899999495596,
+              "botsCount": 0,
+              "avgJitterMs": 0.638,
+              "maxJitterMs": 2.459,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 3973,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.025,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.11760500000673346,
+              "botsCount": 0,
+              "avgJitterMs": 0.476,
+              "maxJitterMs": 2.043,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 65,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 1.024,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 4.518111999990651,
+              "botsCount": 0,
+              "avgJitterMs": 0.782,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 45,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 516
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 131193.906407,
+          "active": 1260.371266000002,
+          "utilization": 0.00951551952977749
+        },
+        "timestamp": 1793732328526
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 83795968\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.4281309965244389\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 600.188525218027\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 330.1036888699149\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 38292.027908910124\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 298803.85727979476\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 660\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 555\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 44684\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 549746\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.48302300000796095\ndogfight_tick_p99_ms{slot=\"1\"} 0.18350899999495596\ndogfight_tick_p99_ms{slot=\"2\"} 0.11760500000673346\ndogfight_tick_p99_ms{slot=\"3\"} 4.518111999990651\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732329541,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 133,
+        "roomsCount": 4,
+        "rssMb": "80.11",
+        "heapUsedMb": "15.93",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4004,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.044,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.12070500000845641,
+              "botsCount": 0,
+              "avgJitterMs": 0.673,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4004,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.029,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.09440400000312366,
+              "botsCount": 0,
+              "avgJitterMs": 0.674,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4004,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.021,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.09330399997998029,
+              "botsCount": 0,
+              "avgJitterMs": 0.553,
+              "maxJitterMs": 2.267,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 95,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.975,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 4.518111999990651,
+              "botsCount": 0,
+              "avgJitterMs": 0.615,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 46,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 756
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 132127.253003,
+          "active": 1339.772186999966,
+          "utilization": 0.010038226184278127
+        },
+        "timestamp": 1793732329537
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84004864\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.07951304309871468\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 300.7953994880103\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 244.58117728861166\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 20612.86768753739\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 278096.6882925478\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 965\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 803\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 65585\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 831730\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.12070500000845641\ndogfight_tick_p99_ms{slot=\"1\"} 0.09440400000312366\ndogfight_tick_p99_ms{slot=\"2\"} 0.09330399997998029\ndogfight_tick_p99_ms{slot=\"3\"} 4.518111999990651\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732330546,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 134,
+        "roomsCount": 4,
+        "rssMb": "80.16",
+        "heapUsedMb": "16.04",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4034,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.042,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.1108049999747891,
+              "botsCount": 0,
+              "avgJitterMs": 0.501,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4034,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.045,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.8281389999901876,
+              "botsCount": 0,
+              "avgJitterMs": 0.779,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4034,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.022,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.1818079999939073,
+              "botsCount": 0,
+              "avgJitterMs": 0.579,
+              "maxJitterMs": 2.267,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 126,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.874,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.4001599999901373,
+              "botsCount": 0,
+              "avgJitterMs": 0.49,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 45,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 1004
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 133032.701686,
+          "active": 1441.1638429999584,
+          "utilization": 0.010717055223560628
+        },
+        "timestamp": 1793732330544
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84049920\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.09886894586945097\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 317.4740467081653\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 238.85194736664474\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 21905.709222863403\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 222992.17806149952\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 1284\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 1043\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 87596\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 1055794\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.1108049999747891\ndogfight_tick_p99_ms{slot=\"1\"} 0.8281389999901876\ndogfight_tick_p99_ms{slot=\"2\"} 0.1818079999939073\ndogfight_tick_p99_ms{slot=\"3\"} 3.4001599999901373\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732331558,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 135,
+        "roomsCount": 4,
+        "rssMb": "80.48",
+        "heapUsedMb": "15.41",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4064,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.041,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.11880500000552274,
+              "botsCount": 0,
+              "avgJitterMs": 0.55,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4064,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.049,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.8281389999901876,
+              "botsCount": 0,
+              "avgJitterMs": 0.661,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4064,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.022,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.1818079999939073,
+              "botsCount": 0,
+              "avgJitterMs": 0.59,
+              "maxJitterMs": 2.267,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 156,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.853,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.4001599999901373,
+              "botsCount": 0,
+              "avgJitterMs": 0.486,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 45,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 1244
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 133964.687311,
+          "active": 1520.965489999944,
+          "utilization": 0.011226026214258451
+        },
+        "timestamp": 1793732331556
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84389888\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.07880467575397146\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 316.29224236471333\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 237.21918177353498\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 21824.164723165217\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 248415.92715324584\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 1604\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 1283\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 109676\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 1307122\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.11880500000552274\ndogfight_tick_p99_ms{slot=\"1\"} 0.8281389999901876\ndogfight_tick_p99_ms{slot=\"2\"} 0.1818079999939073\ndogfight_tick_p99_ms{slot=\"3\"} 3.4001599999901373\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732332564,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 136,
+        "roomsCount": 4,
+        "rssMb": "80.29",
+        "heapUsedMb": "16.11",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4095,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.044,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.21070999998482876,
+              "botsCount": 0,
+              "avgJitterMs": 0.65,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4095,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.049,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.1644090000190772,
+              "botsCount": 0,
+              "avgJitterMs": 0.458,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4095,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.022,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.12570800000685267,
+              "botsCount": 0,
+              "avgJitterMs": 0.615,
+              "maxJitterMs": 2.267,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 186,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.905,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.4055930000031367,
+              "botsCount": 0,
+              "avgJitterMs": 0.558,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 52,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 1484
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 134868.369764,
+          "active": 1623.6472649999778,
+          "utilization": 0.011895547449159662
+        },
+        "timestamp": 1793732332562
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84193280\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.10197004121640027\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 333.8969411012639\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 238.49781507233138\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 23038.888935987212\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 284861.7903223926\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 1940\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 1523\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 132860\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 1593778\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.21070999998482876\ndogfight_tick_p99_ms{slot=\"1\"} 0.1644090000190772\ndogfight_tick_p99_ms{slot=\"2\"} 0.12570800000685267\ndogfight_tick_p99_ms{slot=\"3\"} 3.4055930000031367\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732333577,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 137,
+        "roomsCount": 4,
+        "rssMb": "80.41",
+        "heapUsedMb": "15.49",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4125,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.047,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.21070999998482876,
+              "botsCount": 0,
+              "avgJitterMs": 0.669,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4125,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.062,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.3022179999970831,
+              "botsCount": 0,
+              "avgJitterMs": 0.518,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4125,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.026,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.16750999999931082,
+              "botsCount": 0,
+              "avgJitterMs": 0.691,
+              "maxJitterMs": 3.366,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 217,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.952,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.4055930000031367,
+              "botsCount": 0,
+              "avgJitterMs": 0.69,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 60,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 1732
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 135795.216411,
+          "active": 1709.2406319999136,
+          "utilization": 0.012430438029113528
+        },
+        "timestamp": 1793732333575
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84451328\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.08493060630538982\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 300.1372815090743\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 244.84883491529746\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 20709.472424126125\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 338302.1063578071\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 2244\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 1771\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 153836\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 1936434\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.21070999998482876\ndogfight_tick_p99_ms{slot=\"1\"} 0.3022179999970831\ndogfight_tick_p99_ms{slot=\"2\"} 0.16750999999931082\ndogfight_tick_p99_ms{slot=\"3\"} 3.4055930000031367\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732334590,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 138,
+        "roomsCount": 4,
+        "rssMb": "80.57",
+        "heapUsedMb": "16.30",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4155,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.041,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.1510079999861773,
+              "botsCount": 0,
+              "avgJitterMs": 0.583,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4155,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.052,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.3022179999970831,
+              "botsCount": 0,
+              "avgJitterMs": 0.558,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4155,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.021,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.16750999999931082,
+              "botsCount": 0,
+              "avgJitterMs": 0.698,
+              "maxJitterMs": 3.366,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 247,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.992,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.4335949999804143,
+              "botsCount": 0,
+              "avgJitterMs": 0.723,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 53,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 1972
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 136712.068299,
+          "active": 1800.7004239999515,
+          "utilization": 0.013000248573480044
+        },
+        "timestamp": 1793732334583
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84480000\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.09190375442434932\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 316.94651979622387\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 237.70988984716791\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 21869.30986593945\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 328419.9838128472\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 2564\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 2011\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 175916\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 2268018\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.1510079999861773\ndogfight_tick_p99_ms{slot=\"1\"} 0.3022179999970831\ndogfight_tick_p99_ms{slot=\"2\"} 0.16750999999931082\ndogfight_tick_p99_ms{slot=\"3\"} 3.4335949999804143\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732335603,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 139,
+        "roomsCount": 4,
+        "rssMb": "80.58",
+        "heapUsedMb": "15.69",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4186,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.038,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.1510079999861773,
+              "botsCount": 0,
+              "avgJitterMs": 0.593,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4186,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.048,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.293216999998549,
+              "botsCount": 0,
+              "avgJitterMs": 0.577,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4186,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.015,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.060602999990805984,
+              "botsCount": 0,
+              "avgJitterMs": 0.556,
+              "maxJitterMs": 3.366,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 277,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.954,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.4335949999804143,
+              "botsCount": 0,
+              "avgJitterMs": 0.584,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 55,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 2212
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 137640.680845,
+          "active": 1890.095808999933,
+          "utilization": 0.013546085346366843
+        },
+        "timestamp": 1793732335601
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84492288\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.08660565779824368\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 306.8817479528044\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 236.0628830406188\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 21174.840608743507\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 287807.8670031224\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 2876\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 2251\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 197444\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 2560626\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.1510079999861773\ndogfight_tick_p99_ms{slot=\"1\"} 0.293216999998549\ndogfight_tick_p99_ms{slot=\"2\"} 0.060602999990805984\ndogfight_tick_p99_ms{slot=\"3\"} 3.4335949999804143\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732336606,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 140,
+        "roomsCount": 4,
+        "rssMb": "80.89",
+        "heapUsedMb": "16.58",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4216,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.035,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.09180599998217076,
+              "botsCount": 0,
+              "avgJitterMs": 0.698,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4216,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.044,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.293216999998549,
+              "botsCount": 0,
+              "avgJitterMs": 0.607,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4216,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.015,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.060602999990805984,
+              "botsCount": 0,
+              "avgJitterMs": 0.579,
+              "maxJitterMs": 3.366,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 308,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.673,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.1383780000032857,
+              "botsCount": 0,
+              "avgJitterMs": 0.477,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 65,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 2460
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 138581.193763,
+          "active": 1953.70533300002,
+          "utilization": 0.01390192290717365
+        },
+        "timestamp": 1793732336605
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84815872\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.06294277755488382\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 310.8530399431642\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 247.0883138009767\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 21448.85975607833\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 363969.05681960646\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 3188\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 2499\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 218972\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 2925938\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.09180599998217076\ndogfight_tick_p99_ms{slot=\"1\"} 0.293216999998549\ndogfight_tick_p99_ms{slot=\"2\"} 0.060602999990805984\ndogfight_tick_p99_ms{slot=\"3\"} 3.1383780000032857\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732337623,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 141,
+        "roomsCount": 4,
+        "rssMb": "80.85",
+        "heapUsedMb": "15.93",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4246,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.032,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.09180599998217076,
+              "botsCount": 0,
+              "avgJitterMs": 0.64,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4246,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.034,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.09320500001194887,
+              "botsCount": 0,
+              "avgJitterMs": 0.51,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4246,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.016,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.07560399998328649,
+              "botsCount": 0,
+              "avgJitterMs": 0.56,
+              "maxJitterMs": 3.366,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 338,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.638,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.2136830000090413,
+              "botsCount": 0,
+              "avgJitterMs": 0.555,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 67,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 2700
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 139541.769933,
+          "active": 2009.4493969999894,
+          "utilization": 0.014195917255331703
+        },
+        "timestamp": 1793732337621
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84774912\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.05496394802658443\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 318.7581992799147\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 236.11718465178868\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 21994.315750314116\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 374765.19547931897\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 3512\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 2739\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 241328\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 3306866\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.09180599998217076\ndogfight_tick_p99_ms{slot=\"1\"} 0.09320500001194887\ndogfight_tick_p99_ms{slot=\"2\"} 0.07560399998328649\ndogfight_tick_p99_ms{slot=\"3\"} 3.2136830000090413\n"
+    },
+    {
+      "phase": "after",
+      "at": 1793732338627,
+      "stats": {
+        "version": "lab08-local",
+        "status": "ok",
+        "uptimeSec": 142,
+        "roomsCount": 4,
+        "rssMb": "81.03",
+        "heapUsedMb": "16.03",
+        "rooms": [
+          {
+            "id": "room-alpha",
+            "name": "Alpha Outpost (Casual)",
+            "players": 0,
+            "stats": {
+              "tick": 4276,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.036,
+              "maxDurationMs": 0.883,
+              "tickP99Ms": 0.09120500000426546,
+              "botsCount": 0,
+              "avgJitterMs": 0.606,
+              "maxJitterMs": 2.407,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-nebula",
+            "name": "Nebula Sector (High Velocity)",
+            "players": 0,
+            "stats": {
+              "tick": 4276,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.04,
+              "maxDurationMs": 1.927,
+              "tickP99Ms": 0.1600089999847114,
+              "botsCount": 0,
+              "avgJitterMs": 0.568,
+              "maxJitterMs": 3.449,
+              "overrunCount": 0,
+              "entitiesCount": 7,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-void",
+            "name": "Deep Void (Hunter Asteroids)",
+            "players": 0,
+            "stats": {
+              "tick": 4276,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.017,
+              "maxDurationMs": 0.743,
+              "tickP99Ms": 0.07560399998328649,
+              "botsCount": 0,
+              "avgJitterMs": 0.717,
+              "maxJitterMs": 3.366,
+              "overrunCount": 0,
+              "entitiesCount": 4,
+              "playersCount": 0,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 0
+              }
+            }
+          },
+          {
+            "id": "room-1793732326340-336",
+            "name": "Staging 8",
+            "players": 8,
+            "stats": {
+              "tick": 368,
+              "tickRate": 30,
+              "targetIntervalMs": 33.33,
+              "avgDurationMs": 0.723,
+              "maxDurationMs": 5.151,
+              "tickP99Ms": 3.2136830000090413,
+              "botsCount": 0,
+              "avgJitterMs": 0.582,
+              "maxJitterMs": 4.189,
+              "overrunCount": 0,
+              "entitiesCount": 57,
+              "playersCount": 8,
+              "codec": "binary",
+              "latency": {
+                "latencyMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0,
+                "droppedCount": 0,
+                "transmittedCount": 2940
+              }
+            }
+          }
+        ],
+        "eventLoopUtilization": {
+          "idle": 140478.278931,
+          "active": 2076.3220989998954,
+          "utilization": 0.014565100557946522
+        },
+        "timestamp": 1793732338625
+      },
+      "metrics": "# TYPE dogfight_players gauge\ndogfight_players 8\n# TYPE dogfight_rooms gauge\ndogfight_rooms 4\n# TYPE dogfight_rss_bytes gauge\ndogfight_rss_bytes 84963328\n# TYPE dogfight_event_loop_utilization gauge\ndogfight_event_loop_utilization 0.06701732384834429\n# TYPE dogfight_messagesIn_per_second gauge\ndogfight_messagesIn_per_second 306.8402598035602\n# TYPE dogfight_messagesOut_per_second gauge\ndogfight_messagesOut_per_second 239.09630634043648\n# TYPE dogfight_bytesIn_per_second gauge\ndogfight_bytesIn_per_second 21171.977926445652\n# TYPE dogfight_bytesOut_per_second gauge\ndogfight_bytesOut_per_second 344681.23522037326\n# TYPE dogfight_messagesIn_total counter\ndogfight_messagesIn_total 3820\n# TYPE dogfight_messagesOut_total counter\ndogfight_messagesOut_total 2979\n# TYPE dogfight_bytesIn_total counter\ndogfight_bytesIn_total 262580\n# TYPE dogfight_bytesOut_total counter\ndogfight_bytesOut_total 3652850\n# TYPE dogfight_rejections_total counter\ndogfight_rejections_total{reason=\"origin\"} 0\ndogfight_rejections_total{reason=\"ip_limit\"} 0\ndogfight_rejections_total{reason=\"draining\"} 0\ndogfight_rejections_total{reason=\"protocol\"} 1\ndogfight_rejections_total{reason=\"rate\"} 0\ndogfight_rejections_total{reason=\"join_timeout\"} 0\ndogfight_rejections_total{reason=\"heartbeat\"} 0\ndogfight_rejections_total{reason=\"slow_client\"} 0\ndogfight_rejections_total{reason=\"capacity\"} 0\ndogfight_rejections_total{reason=\"payload\"} 0\n# TYPE dogfight_tick_p99_ms gauge\ndogfight_tick_p99_ms{slot=\"0\"} 0.09120500000426546\ndogfight_tick_p99_ms{slot=\"1\"} 0.1600089999847114\ndogfight_tick_p99_ms{slot=\"2\"} 0.07560399998328649\ndogfight_tick_p99_ms{slot=\"3\"} 3.2136830000090413\n"
+    }
+  ]
+}
