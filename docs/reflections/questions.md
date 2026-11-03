@@ -87,3 +87,29 @@ Optional, if you went into Stretch:
 7. Why does Vite not type-check? How do you get checking anyway, and where does it run?
 8. Name three bugs TypeScript found in your migration. Were any of them *not* type errors in the naive sense (e.g., a missing `undefined` check)?
 9. When is `as` acceptable? Explain each of your casts.
+
+
+## Lab 7 - Engine Performance and Testing
+
+1. Draw V8's pipeline: parser → Ignition → (Maglev) → TurboFan. What triggers optimization? What triggers a deopt? Give an example from your code.
+2. What is a hidden class / shape? Why is `obj.x` fast when a call site sees one shape and slow when it sees twenty? What does that mean for how you write constructors?
+3. Explain generational GC. Why are young-generation collections cheap and old-generation ones expensive? Why does a *long-lived* particle cause more trouble than a short-lived one?
+4. What did the profiler show as your top allocator, and what did you do about it? What's the downside of object pooling?
+5. Why are typed arrays faster than arrays of objects for bulk numeric state? Name two things you lose.
+6. Web Workers: three ways to move data across, with their costs. Why did your worker experiment win or lose?
+7. Property-based test vs example test — when is each better? Show your codec round-trip property and explain shrinking.
+8. Why is `no-floating-promises` important in a server? What bug does it prevent?
+9. Your load test found capacity N. What was the bottleneck — CPU in the tick, bandwidth, or GC — and how do you know?
+
+
+## Lab 8 - Ship It
+
+1. Walk through what your process does between receiving `SIGTERM` and exiting. Why does `CMD npm start` break this? Why does ignoring `SIGTERM` drop players?
+2. Why is a WebSocket server harder to scale horizontally than a REST API? Describe sticky sessions and the Redis pub/sub design. Which did you ship and why?
+3. Why must the client use `wss://`? Where is TLS terminated in your deployment, and what does that mean for the proxy's WebSocket support and idle timeouts?
+4. CORS doesn't apply to WebSockets — so what stops another site's page from connecting to your server as its visitors? Where do you check it?
+5. Liveness vs readiness — what does each answer, and what does the platform do differently with each?
+6. Why structured JSON logs to stdout rather than formatted text to a file? Why does `pino` move formatting off the main thread — which lab's lesson is that?
+7. Multi-stage Docker build: what's in stage 1 that must not be in stage 2, and why? Why copy `package*.json` before the source?
+8. Your load test said capacity N. A stranger's RTT was X ms. Put those two numbers together: how many concurrent players in Europe can your one instance serve well, and what would you change first?
+9. If the server crashes at 3 a.m., how do you find out, and what do you look at first?

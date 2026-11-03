@@ -1,6 +1,6 @@
 # Lab 5 — Real-Time Networking: answers
 
-Numbers match the [original questions](questions.md#lab-5--real-time-networking). Suggested values and encoding assumptions below are examples, not measurements of your implementation.
+Numbers match the [original questions](questions.md#lab-5--real-time-networking). Project-specific values below were checked against the current implementation during the all-labs audit on 2026-11-03.
 
 ## 1. Server authority
 
@@ -43,7 +43,7 @@ Replay the simulation steps represented by those inputs, not an assumed one-inpu
 
 **Answer:**
 
-Rendering slightly behind the latest server time lets two known snapshots bracket the render time despite network jitter. More delay reduces stutter but makes remote entities appear later. **Example choice:** 100 ms, around three snapshot intervals at 30 Hz; tune using measured jitter and buffer underruns rather than treating it as universal.
+Rendering in the past lets two known snapshots bracket the render time despite network jitter. More delay reduces stutter but makes remote entities appear later. This project defaults to **66 ms**, about two 30 Hz snapshot intervals, in [InterpolationManager](../../client/src/net/interpolation.ts). Its buffer uses local arrival times and renders at `performance.now() - interpolationDelayMs`; this is an arrival timeline, not a synchronized server clock. Netgraph shows the delay and enables/disables interpolation, but has no live delay slider. Tune the delay against measured underruns; a value in source is not experimental evidence of an optimal choice.
 
 ## 5. Lag compensation
 
@@ -67,7 +67,7 @@ Use `DataView` for mixed fields, arbitrary offsets, and explicit byte order in p
 
 **Answer:**
 
-Assuming a full turn maps across approximately 65,536 signed values, the step is `360 / 65536 ≈ 0.00549°` (`0.0000959` radians). Rounding gives roughly half a step of maximum error; a 50 px heading vector shifts about 0.0024 px. That is visually negligible. If the encoder uses another scale, calculate precision from that actual scale.
+The actual [binary specification](../../shared/src/codec/spec.ts) uses `ANGLE_QUANTIZATION_FACTOR = 1000`: the encoder rounds radians multiplied by 1000 into an `Int16`, and the decoder divides by 1000. The step is **0.001 rad ≈ 0.0573°**, with nearest-rounding error up to **0.0005 rad ≈ 0.02865°** away from normalization seams. For a 50 px heading vector, that error shifts the tip by at most about **0.025 px**, visually negligible at this scale. The format does not spread a full turn over all 65,536 integer values. Round-trip tests use the actual tolerance.
 
 ## 8. Server tick scheduling
 
@@ -75,7 +75,7 @@ Assuming a full turn maps across approximately 65,536 signed values, the step is
 
 **Answer:**
 
-`setInterval` is not synchronized to simulation deadlines and cannot guarantee timely callbacks. An absolute-target loop computes `target = start + tickIndex * dt`, preventing callback lateness from accumulating into schedule drift. After an overrun, run bounded catch-up steps or apply a documented resynchronization policy. No timer can recover CPU time when the server is continuously overloaded.
+`setInterval` cannot guarantee timely callbacks. This project's `Match.scheduleNextTick()` advances `nextTickTime` by the fixed interval and uses `setTimeout(..., Math.max(0, nextTickTime - performance.now()))`, so ordinary lateness does not accumulate into a shifted schedule. If a tick overruns, the next callback can run with zero delay until the target catches up. The implementation has no explicit catch-up-count cap or resynchronization policy; those would be improvements, not existing features. No timer recovers CPU time when the server is continuously overloaded.
 
 ## 9. Sources of divergence
 

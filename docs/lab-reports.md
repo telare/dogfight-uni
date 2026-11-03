@@ -2,6 +2,8 @@
 
 > Archived lab reports and historical measurements. For the current setup and architecture guide, see [README.md](../README.md).
 
+> Audit correction (2026-11-03): these are historical reports, not independently verified raw measurements. The binary angle formula and parts of the protocol diagram below do not match the encoder; the actual angle factor is 1000 (0.001 rad steps). The existing two-player GIF is a generated 2.16-second illustration, not gameplay footage. See the [all-labs audit](labs-audit.md#lab-05--predictionnetwork-protocol) and [current codec](../shared/src/codec/binaryCodec.ts) before using the archived claims in a defense.
+
 > Курс: **JavaScript — за семестр будуємо мультиплеєрну браузерну гру в реальному часі**  
 > Викладач: Роман Ігорович Малькевич  
 > Студент: індивідуальна робота  
@@ -11,7 +13,7 @@
 
 ## Lab 06 — виконання M1–M4
 
-Завдання: [lab-06.md](../lab-06.md). Теорія: [lab-06.notes.md](../lab-06.notes.md).
+Завдання: [lab-06.md](lab-06.md). Теорія: [lab-06.notes.md](lab-06.notes.md).
 Клієнт, сервер і спільна симуляція перенесені на TypeScript. Усі три пакети
 успадковують `strict`, `noUncheckedIndexedAccess` та `verbatimModuleSyntax` із
 `tsconfig.base.json`. Сервер запускається через `tsx`, клієнт збирається Vite.

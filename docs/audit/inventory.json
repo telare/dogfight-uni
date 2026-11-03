@@ -1,0 +1,78 @@
+{
+  "commit": "ae03a853a0a29c83e7f14e052b3ab6398cf6292b",
+  "labs": [
+    {
+      "lab": 1,
+      "official": "lab-01-event-loop-and-game-loop.md",
+      "checklistItems": 7,
+      "reflectionQuestions": 8
+    },
+    {
+      "lab": 2,
+      "official": "lab-02-objects-prototypes-classes.md",
+      "checklistItems": 7,
+      "reflectionQuestions": 8
+    },
+    {
+      "lab": 3,
+      "official": "lab-03-async-javascript.md",
+      "checklistItems": 7,
+      "reflectionQuestions": 8
+    },
+    {
+      "lab": 4,
+      "official": "lab-04-node-streams-websockets.md",
+      "checklistItems": 10,
+      "reflectionQuestions": 9
+    },
+    {
+      "lab": 5,
+      "official": "lab-05-realtime-networking.md",
+      "checklistItems": 9,
+      "reflectionQuestions": 9
+    },
+    {
+      "lab": 6,
+      "official": "lab-06-typescript.md",
+      "checklistItems": 9,
+      "reflectionQuestions": 9
+    },
+    {
+      "lab": 7,
+      "official": "lab-07-engine-performance-testing.md",
+      "checklistItems": 10,
+      "reflectionQuestions": 9
+    },
+    {
+      "lab": 8,
+      "official": "lab-08-ship-it.md",
+      "checklistItems": 12,
+      "reflectionQuestions": 9
+    }
+  ],
+  "totalChecklistItems": 71,
+  "totalReflectionQuestions": 69,
+  "lab02OptionalReflectionQuestions": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "assertions": {
+    "lab06": {
+      "asConst": 4,
+      "explicitAny": 0
+    },
+    "HEAD": {
+      "asConst": 6,
+      "explicitAny": 0
+    }
+  },
+  "gif": {
+    "width": 820,
+    "height": 360,
+    "frames": 36,
+    "durationMs": 2160,
+    "provenance": "generated drawing; scripts/generate-gif.py; not gameplay evidence"
+  }
+}

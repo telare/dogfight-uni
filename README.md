@@ -4,7 +4,9 @@
 
 Fly a spaceship, dodge asteroids, collect pickups and fight other pilots in a shared browser arena. No account needed: choose a pilot name and a sector, then launch.
 
-![Two pilots fighting](docs/dogfight-two-players.gif)
+![Generated illustration of two pilots fighting](docs/dogfight-two-players.gif)
+
+The GIF above is a generated illustration, not recorded gameplay. The required 20-second two-browser capture remains missing; see the [all-labs evidence audit](docs/labs-audit.md).
 
 **Public launch:** pending hosting configuration. The production build and deployment pipeline are implemented; a public URL, two remote players' RTT, phone installation, external monitor and final demo video are still awaiting real verification. See the [Lab 08 report](docs/lab-08.report.md) and [deployment guide](docs/deployment.md).
 
@@ -404,7 +406,7 @@ git show lab-03:README.md
 | [lab-07](https://github.com/telare/dogfight-uni/tree/lab-07) | Tests, profiling, measured optimizations and load testing |
 | lab-08 / v1.0.0 (pending public release) | Production runtime, hardening, Docker, CI/CD and PWA |
 
-Original Ukrainian Lab 06 and Lab 05 reports, historical measurements, and submission checklists are preserved in [docs/lab-reports.md](docs/lab-reports.md). See [lab-06.md](lab-06.md) for the assignment and [lab-06.notes.md](lab-06.notes.md) for theory.
+Original Ukrainian Lab 06 and Lab 05 reports, historical measurements, and submission checklists are preserved in [docs/lab-reports.md](docs/lab-reports.md). See [lab-06.md](docs/lab-06.md) for the assignment and [lab-06.notes.md](docs/lab-06.notes.md) for theory.
 
 
 ## Lab 07: tests and measured performance

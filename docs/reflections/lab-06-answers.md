@@ -1,6 +1,6 @@
 # Lab 6 — TypeScript: answers
 
-Numbers match the [original questions](questions.md#lab-6--typescript). Code and migration examples are illustrative; project-specific questions require your actual findings and casts.
+Numbers match the [original questions](questions.md#lab-6--typescript). Project-specific answers were checked against the code, archived migration report and `lab-06` tag on 2026-11-03.
 
 ## 1. Structural typing
 
@@ -67,19 +67,17 @@ A server-side parser/schema rejects non-finite or out-of-range inputs, for examp
 
 **Answer:**
 
-A brand distinguishes values that share the same runtime representation.
+A brand distinguishes values that share the same runtime representation. This project uses Zod numeric brands, rather than distinct string player/room IDs:
 
 ```ts
-declare const playerIdBrand: unique symbol
-declare const roomIdBrand: unique symbol
-type PlayerId = string & { readonly [playerIdBrand]: true }
-type RoomId = string & { readonly [roomIdBrand]: true }
-declare function kickPlayer(id: PlayerId): void
-declare const room: RoomId
-// kickPlayer(room) // Type error: a room ID is not a player ID.
+const EntityIdSchema = z.number().int().positive().max(0xffff).brand<'EntityId'>()
+type EntityId = z.infer<typeof EntityIdSchema>
+// Tick and Seq have separate brands in the same protocol module.
+world.get(asEntityId(1)) // Entity lookup accepts the EntityId brand.
+// world.get(asTick(1)) // Type error: Tick is not EntityId.
 ```
 
-Create branded values through validated constructors; brands alone perform no runtime checks.
+`asEntityId`, `asTick` and `asSeq` validate through their schemas. [Type contracts](../../client/src/type-contracts.ts) exercise rejected brand substitutions. Brands alone perform no runtime checks.
 
 ## 6. Generics and a typed event bus
 
@@ -90,32 +88,27 @@ Create branded values through validated constructors; brands alone perform no ru
 Use a generic when an operation preserves a relationship between types, such as an event name determining its payload.
 
 ```ts
-type Events = {
-  joined: { playerId: PlayerId }
-  chat: { text: string }
-}
-
-function createBus<E>() {
-  type Listeners = { [K in keyof E]?: Set<(payload: E[K]) => void> }
-  const listeners: Listeners = {}
-  return {
-    on<K extends keyof E>(name: K, listener: (payload: E[K]) => void) {
-      const set = (listeners[name] ??= new Set<(payload: E[K]) => void>())
-      set.add(listener)
-      return () => { set.delete(listener) }
-    },
-    emit<K extends keyof E>(name: K, payload: E[K]) {
-      listeners[name]?.forEach(listener => listener(payload))
-    },
+class Bus<E extends Record<string, unknown>> {
+  #listeners: { [K in keyof E]?: Set<(payload: E[K]) => void> } = {}
+  on<K extends keyof E>(name: K, fn: (payload: E[K]) => void): () => void {
+    let listeners = this.#listeners[name]
+    if (!listeners) {
+      listeners = new Set()
+      this.#listeners[name] = listeners
+    }
+    listeners.add(fn)
+    return () => { listeners.delete(fn) }
+  }
+  emit<K extends keyof E>(name: K, payload: E[K]): void {
+    for (const listener of this.#listeners[name] ?? []) listener(payload)
   }
 }
-
-const bus = createBus<Events>()
+const bus = new Bus<{ chat: { text: string } }>()
 bus.emit('chat', { text: 'Hello' })
 // bus.emit('chat', { playerId: 'p1' }) // Type error
 ```
 
-`K extends keyof E` restricts names to event keys; `E[K]` selects the corresponding payload. The mapped listener store preserves that relationship without casts.
+This is the relationship used by [shared Bus](../../shared/src/events.ts). `K extends keyof E` restricts names to event keys; `E[K]` selects the corresponding payload. The mapped listener store preserves that relationship without casts. The client derives `GameEvents` from the server-message union.
 
 ## 7. Vite and type-checking
 
@@ -131,7 +124,13 @@ Vite transpiles TypeScript quickly without performing whole-program type-checkin
 
 **Answer:**
 
-**Illustrative examples, not verified migration history:** a misspelled message field; a missing union case in a handler; and dereferencing `entities.get(id)` without handling `undefined`. The last two reveal missing behavior or assumptions, beyond simply passing a string where a number belongs. Replace these with actual compiler findings for your defense.
+The [archived migration report](../lab-reports.md) records these concrete findings, all reflected in source:
+
+- [Canvas setup](../../client/src/render/canvas.ts): `getContext('2d')` can return null; initialization now checks before use.
+- [Netgraph](../../client/src/ui/netgraph.ts): event targets can be null or an unsuitable element; handlers narrow through `instanceof` before reading DOM properties.
+- [Collision rules](../../shared/src/sim/collision.ts): owner lookup through `world.get()` can be undefined; scoring checks the owner and entity kind.
+
+These expose assumptions about missing values and runtime structure, not just primitive type mismatches. The report is preserved migration history; this audit did not replay the migration or claim a fresh compiler error from already-fixed code.
 
 ## 9. Acceptable assertions
 
@@ -139,4 +138,11 @@ Vite transpiles TypeScript quickly without performing whole-program type-checkin
 
 **Answer:**
 
-Use `as` only when external evidence establishes something TypeScript cannot infer. Examples: branding an ID immediately after validation; narrowing a canvas element after checking the actual DOM; or an interoperability boundary whose contract has been verified. Prefer narrowing, generics, or `satisfies` where possible. For each actual cast, explain the invariant and where it is enforced; avoid `as any` or double assertions used merely to silence errors.
+Use an assertion only when its invariant is established independently; prefer narrowing, generics or `satisfies`. At `lab-06`, all **four assertions are `as const`**, with adjacent comments:
+
+- [Binary specification](../../shared/src/codec/spec.ts): preserves immutable layout literal types, including `LITTLE_ENDIAN: true`.
+- [Protocol](../../shared/src/protocol/protocol.ts): `CloseCode`, `ClientMessageType` and `ServerMessageType` each preserve literal values for typed close codes and exhaustive message dispatch.
+
+The `satisfies` checks verify the map shapes without widening those literals. Brands are produced by schema validation, not `as` casts. A mapped-type key remap (`as M['type']`) and an import alias (`config as serverConfig`) are not assertions.
+
+At the audited Lab 08 HEAD, [metrics](../../server/src/metrics.ts) adds two `as const` tuple assertions so counter keys retain their finite union. That makes **six assertions in current production source**, all const assertions: the historical Lab 06 tag meets the fewer-than-five requirement, while current HEAD exceeds that literal count. Do not claim the current total is four. The audit found zero explicit `any` type nodes in production TypeScript.

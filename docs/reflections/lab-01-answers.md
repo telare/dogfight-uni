@@ -49,6 +49,8 @@ Callbacks run during a rendering update, before paint, normally after the preced
 
 Add elapsed frame time to an accumulator; while it contains at least one fixed `dt`, simulate one step and subtract `dt`. Clamp large frame deltas to prevent excessive catch-up after a pause. `alpha = accumulator / dt`; render between previous and current states using `previous * (1 - alpha) + current * alpha`.
 
+At `lab-01`, `main.js` calls `interpolateShip(previous, ship, alpha)` with angle-wrap handling. Current multiplayer `main.ts` still receives alpha but draws the local ship using prediction correction smoothing and remote ships using the snapshot buffer; it does not use local previous/current alpha interpolation. This is a historical/current distinction, not a claim that HEAD still performs both.
+
 ## 6. Determinism
 
 **Question:** Why must the simulation be deterministic, and what does that have to do with multiplayer (Lab 5)?

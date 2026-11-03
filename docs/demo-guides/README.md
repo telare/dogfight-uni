@@ -10,6 +10,10 @@ Each guide presents the corresponding historical Git tag and includes PowerShell
 | 4 | [Node.js, rooms, WebSockets, and streams](lab-04.md) | Node backend + Vite |
 | 5 | [Authoritative multiplayer, prediction, and binary protocol](lab-05.md) | Node backend + Vite |
 | 6 | [Strict TypeScript and validated shared contracts](lab-06.md) | Node backend + Vite |
+| 7 | [Testing and measured performance](lab-07.md) | Built app + isolated benchmark processes |
+| 8 | [Production, hardening and launch](lab-08.md) | Compiled Node / Docker |
+
+Reflection answers for all labs are indexed [here](../reflections/README.md). The [all-labs evidence audit](../labs-audit.md) identifies missing captures and differences between historical tags and current HEAD. The historical checkout instructions below apply to Labs 01–06; use the separate Lab 07/08 guides for their procedures.
 
 Each guide uses **`git checkout <full commit hash>` in `D:\UNI\4th\js`**, followed by **`npm.cmd ci`** and the appropriate development commands. Run one lab at a time and stop its servers with **Ctrl+C** before switching. Installation requires access to the npm registry.
 

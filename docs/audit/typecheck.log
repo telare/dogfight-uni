@@ -1,0 +1,16 @@
+
+> dogfight@0.1.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> dogfight-client@0.1.0 typecheck
+> tsc --noEmit -p .
+
+
+> dogfight-server@0.1.0 typecheck
+> tsc --noEmit -p .
+
+
+> shared@0.1.0 typecheck
+> tsc --noEmit -p .
+

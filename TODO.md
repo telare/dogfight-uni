@@ -1,5 +1,9 @@
 # Project TODO
 
+## All-labs evidence audit
+
+See the [71-item audit](docs/labs-audit.md) and [69 reflection answers](docs/reflections/README.md). Current tests/CI pass, but the audit found earlier missing evidence and implementation differences: Lab 01 hardware/raw captures, Lab 03 loader failure gallery, Lab 04 200 MB backpressure, Lab 05 real 20-second gameplay/determinism captures and interpolation/bullet behavior, current assertion-count drift, and Lab 07's unpublished tag/performance exceptions. These findings qualify earlier completion summaries; use the audit's per-item status rather than assuming every checked historical summary means all required evidence exists.
+
 ## Lab 08 ? implemented and verified locally; public launch pending
 
 Requirements: [plan](docs/lab-08.plan.md). Results: [report](docs/lab-08.report.md). Release procedure: [deployment](docs/deployment.md).

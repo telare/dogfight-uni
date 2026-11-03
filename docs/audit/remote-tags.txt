@@ -1,0 +1,9 @@
+27353863ff00953c2b5563bd2860663af81ba11e	refs/tags/lab-01
+f694fb9d8a5e36d84c2204092924743c4265c53f	refs/tags/lab-02
+76f73850d97fd64b53a950aafbbbcaebd0ec8ab4	refs/tags/lab-03
+03c8f01c51c1e7be529e4ca9433d801839770ce8	refs/tags/lab-03^{}
+50adb1a7e8a9935bda6066a66a0c0ea6162c636d	refs/tags/lab-04
+b11cf38edbbd5fda9494db980620d69d70fc20f8	refs/tags/lab-05
+366b6efcfc3d95ffd57ba5730eee04c74ad00c39	refs/tags/lab-05^{}
+3e02e38706b0531c285fad55735ccc23d2b3a39f	refs/tags/lab-06
+db39aee96a15324500480fe9956766ed68049f10	refs/tags/lab-06^{}

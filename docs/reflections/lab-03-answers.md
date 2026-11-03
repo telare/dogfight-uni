@@ -47,6 +47,8 @@ Treating each `logN` as a logging action, the order is **4, 6, 2, 5, 3, 1**. The
 - `race`: race a lobby request against a timeout; the first settlement wins.
 - `any`: try asset mirrors; the first fulfillment wins, rejecting only if all fail.
 
+These are game-related use cases, not a claim that all four combinators are currently used. The actual loader uses `Promise.all`; the current lobby timeout is implemented through abort signals rather than a timer promise race. Mirror loading and optional-sound `allSettled` are alternatives.
+
 The other operations continue when `all` rejects or a race finishes. Cancel them explicitly with abort signals if supported.
 
 ## 5. Fetch responses
